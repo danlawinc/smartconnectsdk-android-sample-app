@@ -29,6 +29,7 @@ import com.example.danlaw.demo.events.ConnectionStatusChangeEvent;
 import com.example.danlaw.demo.events.OBDDevicesFoundEvent;
 import com.example.danlaw.demo.model.DataLogger;
 
+import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
@@ -146,8 +147,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(MainActivity.this)
-                .setTitle("Do you want to disconnect from DataLogger?")
-                .setPositiveButton("Disconnect", new DialogInterface.OnClickListener() {
+                .setTitle("Do you want to close the app?")
+                .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dataLoggerInterface.disconnect();
@@ -161,6 +162,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }).setCancelable(true)
                 .show();
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
     }
 
 }

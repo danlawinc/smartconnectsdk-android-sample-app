@@ -37,7 +37,7 @@ import java.util.HashMap;
 
 public class MyDemoApplication extends MultiDexApplication implements AutoConnectApp, IAuthCallback {
 
-    private static final String DEFAULT_API_KEY = "c0085e2610df4f9e67886858f804358fe750f868370445d2f58ae11d141d4014a38edcc4e98c30d3eb55c3c281e034ef";
+    private static final String DEFAULT_API_KEY = "043a1b36163fa53cba313b6d92101035f545d6a0082935134cbcf3398569882647733a57e08189d8514277ef0f13522f";
     private IDataLoggerCallback iDataLoggerCallback = new IDataLoggerCallback() {
         @Override
         public void onOBDDeviceFound(String deviceName, String deviceAddress) {

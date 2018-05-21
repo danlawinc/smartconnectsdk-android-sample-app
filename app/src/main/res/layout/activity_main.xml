@@ -1,27 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.danlaw.demo.activity.MainActivity"
-    android:background="@color/black">
-<ImageView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content" />
+    android:background="@color/black"
+    tools:context="com.example.danlaw.demo.activity.MainActivity">
+
     <Button
         android:id="@+id/scanButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="scan"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
         android:background="@color/colorPrimary"
-        android:textColor="#fff"/>
+        android:text="scan"
+        android:textColor="#fff"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <RelativeLayout
-        android:layout_width="match_parent"
+        android:id="@+id/relativeLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/scanButton">
+        android:layout_below="@+id/scanButton"
+        android:layout_marginBottom="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintBottom_toTopOf="@+id/favSwitch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scanButton">
 
         <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/animation_view"
@@ -35,9 +48,25 @@
             android:id="@+id/devicesList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
             android:layout_centerInParent="true"
-            android:background="@color/white" />
+            android:background="@color/white"
+            android:visibility="gone" />
     </RelativeLayout>
 
-</RelativeLayout>
+    <Switch
+        android:id="@+id/favSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:checked="false"
+        android:scaleX="1.7"
+        android:scaleY="1.7"
+        android:text="AutoConnect "
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:checked="false" />
+
+</android.support.constraint.ConstraintLayout>
