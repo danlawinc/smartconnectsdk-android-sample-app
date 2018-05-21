@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Danlaw Demo</string>
+    <string name="title_activity_connected">ConnectedActivity</string>
 </resources>

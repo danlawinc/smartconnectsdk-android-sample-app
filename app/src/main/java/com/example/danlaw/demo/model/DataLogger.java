@@ -1,9 +1,5 @@
 package com.example.danlaw.demo.model;
 
-/**
- * Created by akshitg on 8/11/2017.
- */
-
 public class DataLogger {
     private String name;
     private String address;

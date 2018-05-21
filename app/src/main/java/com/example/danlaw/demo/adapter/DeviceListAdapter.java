@@ -12,10 +12,6 @@ import com.example.danlaw.demo.model.DataLogger;
 
 import java.util.ArrayList;
 
-/**
- * Created by akshitg on 8/11/2017.
- */
-
 public class DeviceListAdapter extends BaseAdapter {
     private ArrayList<DataLogger> devices = new ArrayList<>();
     private Context context;

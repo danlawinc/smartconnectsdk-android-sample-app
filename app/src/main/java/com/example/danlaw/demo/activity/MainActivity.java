@@ -1,9 +1,14 @@
 package com.example.danlaw.demo.activity;
 
 import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -14,18 +19,20 @@ import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.danlaw.mobilegateway.bluetooth.BluetoothInterface;
-import com.danlaw.mobilegateway.bluetooth.IBluetoothCallback;
 import com.danlaw.mobilegateway.datalogger.DataLoggerInterface;
-import com.danlaw.mobilegateway.datalogger.IDataLoggerCallback;
-import com.danlaw.mobilegateway.datalogger.model.Message;
 import com.danlaw.mobilegateway.exception.BleNotSupportedException;
 import com.danlaw.mobilegateway.exception.SdkNotAuthenticatedException;
+import com.example.danlaw.demo.MyDemoApplication;
 import com.example.danlaw.demo.R;
 import com.example.danlaw.demo.adapter.DeviceListAdapter;
+import com.example.danlaw.demo.events.ConnectionStatusChangeEvent;
+import com.example.danlaw.demo.events.OBDDevicesFoundEvent;
 import com.example.danlaw.demo.model.DataLogger;
 
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     Button scanButton;
     LottieAnimationView lottieAnimationView;
     DeviceListAdapter devicesAdapter;
-
+    BluetoothInterface bluetoothInterface;
 
     private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
     private static final String[] REQUIRED_SDK_PERMISSIONS = new String[]{
@@ -61,7 +68,9 @@ public class MainActivity extends AppCompatActivity {
             // request all missing permissions
             final String[] permissions = missingPermissions
                     .toArray(new String[missingPermissions.size()]);
-            requestPermissions(permissions, REQUEST_CODE_ASK_PERMISSIONS);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(permissions, REQUEST_CODE_ASK_PERMISSIONS);
+            }
         }
         scanButton = (Button) findViewById(R.id.scanButton);
         lottieAnimationView = (LottieAnimationView) findViewById(R.id.animation_view);
@@ -82,130 +91,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        IDataLoggerCallback iDataLoggerCallback = new IDataLoggerCallback() {
-            @Override
-            public void onOBDDeviceFound(String s, String s1) {
-                dataLoggerInterface.scanForDataLoggers(false);
-                DataLogger datalogger = new DataLogger(s, s1);
-                // TODO: 8/11/2017 add in something like on scan complete;
-                devices.add(datalogger);
-                lottieAnimationView.cancelAnimation();
-                lottieAnimationView.setVisibility(View.GONE);
-                listView.setVisibility(View.VISIBLE);
-                devicesAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onConnectionStatusChange(int i, int i1) {
-                if (i1 == DataLoggerInterface.STATE_CONNECTED)
-                    listView.getChildAt(selectedDevice).setBackgroundColor(Color.GREEN);
-                else if (i1 == DataLoggerInterface.STATE_CONNECTING)
-                    listView.getChildAt(selectedDevice).setBackgroundColor(Color.DKGRAY);
-                else
-                    listView.getChildAt(selectedDevice).setBackgroundColor(Color.RED);
-            }
-
-            @Override
-            public void onAutoConnecting(String s, String s1) {
-
-            }
-
-            @Override
-            public void onPasswordChange(int i) {
-
-            }
-
-            @Override
-            public void onBasicDataReceived(int i, int i1, Object o) {
-
-            }
-
-            @Override
-            public void onDataPidRegistered(int i, int i1) {
-
-            }
-
-            @Override
-            public void onDataPidUnregistered(int i, int i1) {
-
-            }
-
-            @Override
-            public void onDataPidDataReceived(int i, int i1, HashMap<Integer, Object> hashMap) {
-
-            }
-
-            @Override
-            public void onEventPidRegistered(int i) {
-
-            }
-
-            @Override
-            public void onEventPidUnregistered(int i) {
-
-            }
-
-            @Override
-            public void onEventPidDataReceived(int i, int i1, Object o) {
-
-            }
-
-            @Override
-            public void onDataTransfer(int i, Message message) {
-
-            }
-
-            @Override
-            public void onDataTransfer(int i, byte[] bytes) {
-
-            }
-
-            @Override
-            public void onConnectedToBackOffice(boolean b, int i) {
-
-            }
-
-            @Override
-            public void onScanStopped(boolean b) {
-
-            }
-
-            @Override
-            public void onWifiAdded(boolean b) {
-
-            }
-
-            @Override
-            public void onWifiDeleted(boolean b) {
-
-            }
-
-            @Override
-            public void onWifiList(ArrayList<String> arrayList) {
-
-            }
-        };
-
-        IBluetoothCallback bc = new IBluetoothCallback() {
-            @Override
-            public void onBluetoothEnabled(boolean b) {
-                if (b)
-                    Toast.makeText(MainActivity.this, "ble enabled", Toast.LENGTH_SHORT).show();
-            }
-        };
-
-        BluetoothInterface bi = null;
         try {
-            bi = BluetoothInterface.getInstance(getApplicationContext(), bc);
+            dataLoggerInterface = ((MyDemoApplication) getApplication()).getDataLoggerInterface();
+            bluetoothInterface = ((MyDemoApplication) getApplication()).getBluetoothInterface();
         } catch (BleNotSupportedException e) {
             e.printStackTrace();
-        } catch (SdkNotAuthenticatedException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            dataLoggerInterface = DataLoggerInterface.getInstance(getApplicationContext(), bi, iDataLoggerCallback);
         } catch (SdkNotAuthenticatedException e) {
             e.printStackTrace();
         }
@@ -222,4 +112,55 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onOBDDevicesFoundEvent(OBDDevicesFoundEvent event) {
+        // TODO: 5/18/2018 maybe add scan complete callback
+        dataLoggerInterface.scanForDataLoggers(false);
+        DataLogger datalogger = new DataLogger(event.deviceName, event.deviceAddress);
+        devices.add(datalogger);
+        lottieAnimationView.cancelAnimation();
+        lottieAnimationView.setVisibility(View.GONE);
+        listView.setVisibility(View.VISIBLE);
+        devicesAdapter.notifyDataSetChanged();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onConnectionStatusChangeEvent(ConnectionStatusChangeEvent event) {
+        if (event.connectionStatus == DataLoggerInterface.STATE_CONNECTED) {
+            listView.getChildAt(selectedDevice).setBackgroundColor(Color.GREEN);
+            Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startActivity(new Intent(MainActivity.this,ConnectedActivity.class));
+                }
+            }, 500);
+        } else if (event.connectionStatus == DataLoggerInterface.STATE_CONNECTING)
+            listView.getChildAt(selectedDevice).setBackgroundColor(Color.DKGRAY);
+        else
+            listView.getChildAt(selectedDevice).setBackgroundColor(Color.RED);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Do you want to disconnect from DataLogger?")
+                .setPositiveButton("Disconnect", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dataLoggerInterface.disconnect();
+                        finish();
+                        System.exit(0);
+                    }
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        }).setCancelable(true)
+                .show();
+    }
+
 }
