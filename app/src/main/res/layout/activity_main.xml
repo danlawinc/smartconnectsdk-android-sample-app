@@ -31,7 +31,7 @@
         android:layout_marginEnd="32dp"
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
-        app:layout_constraintBottom_toTopOf="@+id/favSwitch"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scanButton">
@@ -52,21 +52,5 @@
             android:background="@color/white"
             android:visibility="gone" />
     </RelativeLayout>
-
-    <Switch
-        android:id="@+id/favSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:checked="false"
-        android:scaleX="1.7"
-        android:scaleY="1.7"
-        android:text="AutoConnect "
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:checked="false" />
 
 </android.support.constraint.ConstraintLayout>

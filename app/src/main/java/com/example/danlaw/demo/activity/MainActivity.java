@@ -25,6 +25,7 @@ import com.danlaw.mobilegateway.exception.SdkNotAuthenticatedException;
 import com.example.danlaw.demo.MyDemoApplication;
 import com.example.danlaw.demo.R;
 import com.example.danlaw.demo.adapter.DeviceListAdapter;
+import com.example.danlaw.demo.events.AutoConnectingEvent;
 import com.example.danlaw.demo.events.ConnectionStatusChangeEvent;
 import com.example.danlaw.demo.events.OBDDevicesFoundEvent;
 import com.example.danlaw.demo.model.DataLogger;
@@ -42,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<DataLogger> devices = new ArrayList<>();
     boolean tryingToConnect = false;
     ListView listView;
-    int selectedDevice = -1;
+    int selectedDevicePositionInList = -1;
+    DataLogger selectedDatalogger = null;
     Button scanButton;
     LottieAnimationView lottieAnimationView;
     DeviceListAdapter devicesAdapter;
@@ -50,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
     private static final String[] REQUIRED_SDK_PERMISSIONS = new String[]{
-            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+            Manifest.permission.ACCESS_FINE_LOCATION};
 
 
     @Override
@@ -83,7 +85,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (!tryingToConnect) {
-                    selectedDevice = position;
+                    selectedDevicePositionInList = position;
+                    selectedDatalogger = new DataLogger(devices.get(position).getName(), devices.get(position).getAddress());
                     dataLoggerInterface.connect(devices.get(position).getAddress());
                     view.setBackgroundColor(Color.DKGRAY);
                     Toast.makeText(MainActivity.this, "Initiating connection", Toast.LENGTH_SHORT).show();
@@ -106,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 devices.clear();
+                selectedDatalogger = null;
                 listView.setVisibility(View.INVISIBLE);
                 lottieAnimationView.setVisibility(View.VISIBLE);
                 lottieAnimationView.playAnimation();
@@ -118,8 +122,8 @@ public class MainActivity extends AppCompatActivity {
     public void onOBDDevicesFoundEvent(OBDDevicesFoundEvent event) {
         // TODO: 5/18/2018 maybe add scan complete callback
         dataLoggerInterface.scanForDataLoggers(false);
-        DataLogger datalogger = new DataLogger(event.deviceName, event.deviceAddress);
-        devices.add(datalogger);
+        selectedDatalogger = new DataLogger(event.deviceName, event.deviceAddress);
+        devices.add(selectedDatalogger);
         lottieAnimationView.cancelAnimation();
         lottieAnimationView.setVisibility(View.GONE);
         listView.setVisibility(View.VISIBLE);
@@ -129,18 +133,21 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onConnectionStatusChangeEvent(ConnectionStatusChangeEvent event) {
         if (event.connectionStatus == DataLoggerInterface.STATE_CONNECTED) {
-            listView.getChildAt(selectedDevice).setBackgroundColor(Color.GREEN);
+            listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.GREEN);
             Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    startActivity(new Intent(MainActivity.this,ConnectedActivity.class));
+                    Intent resultIntent = new Intent(getApplicationContext(), ConnectedActivity.class);
+                    resultIntent.putExtra("deviceName", selectedDatalogger.getName());
+                    resultIntent.putExtra("deviceAddress", selectedDatalogger.getAddress());
+                    startActivity(resultIntent);
                 }
             }, 500);
         } else if (event.connectionStatus == DataLoggerInterface.STATE_CONNECTING)
-            listView.getChildAt(selectedDevice).setBackgroundColor(Color.DKGRAY);
+            listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.DKGRAY);
         else
-            listView.getChildAt(selectedDevice).setBackgroundColor(Color.RED);
+            listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.RED);
     }
 
 
@@ -163,16 +170,25 @@ public class MainActivity extends AppCompatActivity {
         }).setCancelable(true)
                 .show();
     }
+
     @Override
     public void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
+        ((MyDemoApplication) getApplication()).isAppInForeground = true;
     }
 
     @Override
     public void onStop() {
         EventBus.getDefault().unregister(this);
+        ((MyDemoApplication) getApplication()).isAppInForeground = false;
         super.onStop();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onAutoConnectingEvent(AutoConnectingEvent event) {
+        selectedDatalogger = new DataLogger(event.deviceName, event.deviceAddress);
+        Toast.makeText(MainActivity.this, "Auto Connect in progress, connecting to favorite device.", Toast.LENGTH_SHORT).show();
     }
 
 }

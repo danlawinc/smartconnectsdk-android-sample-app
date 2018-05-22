@@ -11,15 +11,33 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_margin="10dp"
         android:layout_weight="1">
 
         <TextView
+            android:id="@+id/connectedText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
             android:text="CONNECTED TO DATA LOGGER"
-            android:textSize="25sp"
+            android:textSize="23sp"
             android:textStyle="bold|italic" />
+
+        <Switch
+            android:id="@+id/favSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/connectedText"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="16dp"
+            android:checked="false"
+            android:onClick="onAutoConnectSwitchToggle"
+            android:scaleX="1.5"
+            android:showText="true"
+            android:scaleY="1.5"
+            android:textOff="AutoConnect is turned"
+            tools:checked="false" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -100,11 +118,21 @@
             android:id="@+id/EventPidRequestButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
             android:onClick="onEventPid"
-            android:text="Request Event Pid" />
+            android:text="Register Event Pid" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:onClick="onUnregisterEventPid"
+            android:text="Unregister Event Pid" />
 
         <TextView
+            android:id="@+id/eventDescriptionTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
