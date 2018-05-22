@@ -3,8 +3,8 @@ package com.example.danlaw.demo;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.support.multidex.MultiDexApplication;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.danlaw.mobilegateway.auth.AuthInterface;
 import com.danlaw.mobilegateway.auth.IAuthCallback;
@@ -17,7 +17,6 @@ import com.danlaw.mobilegateway.datalogger.model.Message;
 import com.danlaw.mobilegateway.exception.BleNotSupportedException;
 import com.danlaw.mobilegateway.exception.SdkNotAuthenticatedException;
 import com.example.danlaw.demo.activity.ConnectedActivity;
-import com.example.danlaw.demo.activity.MainActivity;
 import com.example.danlaw.demo.events.AutoConnectingEvent;
 import com.example.danlaw.demo.events.BasicDataReceivedEvent;
 import com.example.danlaw.demo.events.ConnectionStatusChangeEvent;
@@ -37,7 +36,8 @@ import java.util.HashMap;
 
 public class MyDemoApplication extends MultiDexApplication implements AutoConnectApp, IAuthCallback {
 
-    private static final String DEFAULT_API_KEY = "043a1b36163fa53cba313b6d92101035f545d6a0082935134cbcf3398569882647733a57e08189d8514277ef0f13522f";
+    private static final String DEFAULT_API_KEY = "test";
+    public boolean isAppInForeground = false;
     private IDataLoggerCallback iDataLoggerCallback = new IDataLoggerCallback() {
         @Override
         public void onOBDDeviceFound(String deviceName, String deviceAddress) {
@@ -155,10 +155,9 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
     IBluetoothCallback iBluetoothCallback = new IBluetoothCallback() {
         @Override
         public void onBluetoothEnabled(boolean enabled) {
-                Log.v("BLE Callback - ", "ble enabled status: " + String.valueOf(enabled));
+            Log.v("BLE Callback - ", "ble enabled status: " + String.valueOf(enabled));
         }
     };
-    public Boolean isAppInForeground = false;
 
     @Override
     public void onCreate() {
@@ -181,7 +180,7 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
 
     @Override
     public String getNotificationText() {
-        return "Click to open Smart Connect";
+        return "Click to open demo app";
     }
 
     @Override
@@ -191,12 +190,20 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
 
     @Override
     public PendingIntent getNotificationPendingIntent(String deviceName, String deviceAddress) {
+        // Construct the PendingIntent for your Notification
         Intent resultIntent = new Intent(getApplicationContext(), ConnectedActivity.class);
         resultIntent.putExtra("deviceName", deviceName);
         resultIntent.putExtra("deviceAddress", deviceAddress);
-        // Because clicking the notification opens a new ("special") activity, there's
-        // no need to create an artificial back stack.
-        return PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // clicking on notification will skip main activity and directly take the user to connected activity screen.
+        // clicking back will take the user straight to launcher which is not a good user experience.
+        // task stack builder, helps to synthetically creates a back stack and enables consistent user experience
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+
+        // This uses android:parentActivityName and
+        // android.support.PARENT_ACTIVITY meta-data by default
+        stackBuilder.addNextIntentWithParentStack(resultIntent);
+        return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     @Override
