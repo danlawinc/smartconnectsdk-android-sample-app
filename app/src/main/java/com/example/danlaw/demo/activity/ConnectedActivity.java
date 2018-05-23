@@ -67,16 +67,16 @@ public class ConnectedActivity extends AppCompatActivity {
             dataLoggerInterface = ((MyDemoApplication) getApplication()).getDataLoggerInterface();
             bluetoothInterface = ((MyDemoApplication) getApplication()).getBluetoothInterface();
         } catch (BleNotSupportedException e) {
-            Log.d(TAG,"bluetooth not supported");
+            Log.d(TAG, "bluetooth not supported");
             e.printStackTrace();
         } catch (SdkNotAuthenticatedException e) {
-            Log.d(TAG,"SDK not authenticated");
+            Log.d(TAG, "SDK not authenticated");
             e.printStackTrace();
         }
 
         String name = getIntent().getStringExtra("deviceName");
         String address = getIntent().getStringExtra("deviceAddress");
-        dataLogger = new DataLogger(name,address);
+        dataLogger = new DataLogger(name, address);
         dpidListSpeed = new ArrayList<>();
         dpidListRPM = new ArrayList<>();
         eventPids = new ArrayList<>();
@@ -85,6 +85,7 @@ public class ConnectedActivity extends AppCompatActivity {
         fuelTextView = (TextView) findViewById(R.id.fuelLevelValue);
         speedTextView = (TextView) findViewById(R.id.speedTextView);
         rpmTextView = (TextView) findViewById(R.id.rpmTextView);
+        favSwitch = (Switch) findViewById(R.id.favSwitch);
         eventDescriptionView = (TextView) findViewById(R.id.eventDescriptionTextView);
         registerAdvancedButton = (Button) findViewById(R.id.registerAdvancedButton);
         unRegisterAdvancedButton = (Button) findViewById(R.id.unRegisterAdvancedButton);
@@ -92,8 +93,8 @@ public class ConnectedActivity extends AppCompatActivity {
         favSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    dataLoggerInterface.setFavoriteDevice(dataLogger.getName(),dataLogger.getAddress());
+                if (isChecked) {
+                    dataLoggerInterface.setFavoriteDevice(dataLogger.getName(), dataLogger.getAddress());
                     favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
                 } else {
                     dataLoggerInterface.forgetDevice();
@@ -101,7 +102,13 @@ public class ConnectedActivity extends AppCompatActivity {
                 }
             }
         });
-        favSwitch.setChecked(dataLoggerInterface.isFavDevice(dataLogger.getName(),dataLogger.getAddress()));
+        boolean isFav = dataLoggerInterface.isFavDevice(dataLogger.getName(), dataLogger.getAddress());
+        if (isFav) {
+            favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
+        } else {
+            favSwitch.setText("Auto connect not enabled for the connected device");
+        }
+        favSwitch.setChecked(isFav);
         eventPids.add(DataLoggerInterface.PID_EVENT_HARD_BRAKING);
         eventPids.add(DataLoggerInterface.PID_EVENT_HARD_ACCEL);
         // same pid should not be registered multiple times to avoid overwhelming datalogger
@@ -188,7 +195,7 @@ public class ConnectedActivity extends AppCompatActivity {
                 break;
             case DataLoggerInterface.PID_EVENT_HARD_ACCEL:
                 Integer accelValue = ((HardAccelerationData) event.data).maxAcceleration;
-                eventDescription = "Hard Break: " + String.valueOf(accelValue);
+                eventDescription = "Hard Accel: " + String.valueOf(accelValue);
                 break;
             default:
                 break;

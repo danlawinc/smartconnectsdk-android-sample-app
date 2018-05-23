@@ -11,6 +11,9 @@
         android:textAppearance="?android:attr/textAppearanceListItemSmall"
         android:gravity="center"
         android:textAlignment="center"
+        android:textColor="#000"
+        android:textStyle="bold"
+        android:text="test"
         android:paddingStart="?android:attr/listPreferredItemPaddingStart"
         android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
         android:minHeight="?android:attr/listPreferredItemHeightSmall" />

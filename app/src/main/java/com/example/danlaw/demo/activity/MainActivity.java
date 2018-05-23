@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -53,13 +54,15 @@ public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
     private static final String[] REQUIRED_SDK_PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION};
-
+    final private String TAG = MainActivity.class.getCanonicalName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final List<String> missingPermissions = new ArrayList<>();
+        // bluetooth requires ACCESS_FINE_LOCATION permission to scan for bluetooth devices. Checking for permission
+        // on create in case the user revoked permission in setting while the app was closed.
         // check all required dynamic permissions
         for (final String permission : REQUIRED_SDK_PERMISSIONS) {
             final int result = ContextCompat.checkSelfPermission(getApplicationContext(), permission);
@@ -75,20 +78,24 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(permissions, REQUEST_CODE_ASK_PERMISSIONS);
             }
         }
+        // setting up views
         scanButton = (Button) findViewById(R.id.scanButton);
         lottieAnimationView = (LottieAnimationView) findViewById(R.id.animation_view);
         lottieAnimationView.setAnimation("ripple_loading_animation.json");
         listView = (ListView) findViewById(R.id.devicesList);
+        // setting device adapter to show list of devices found during scanning
         devicesAdapter = new DeviceListAdapter(getApplicationContext(), devices);
         listView.setAdapter(devicesAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // update UI and try connecting to a device if any connection is not in progress.
                 if (!tryingToConnect) {
                     selectedDevicePositionInList = position;
                     selectedDatalogger = new DataLogger(devices.get(position).getName(), devices.get(position).getAddress());
+                    // calling connect method from datalogger interface to initiate connection. SDK takes care of handling bluetooth connection in the background.
                     dataLoggerInterface.connect(devices.get(position).getAddress());
-                    view.setBackgroundColor(Color.DKGRAY);
+                    view.setBackgroundColor(Color.LTGRAY);
                     Toast.makeText(MainActivity.this, "Initiating connection", Toast.LENGTH_SHORT).show();
                 } else
                     Toast.makeText(MainActivity.this, "Connection in progress", Toast.LENGTH_SHORT).show();
@@ -96,13 +103,18 @@ public class MainActivity extends AppCompatActivity {
         });
 
         try {
+            // getting the singleton datalogger interface to communicate with datalogger
             dataLoggerInterface = ((MyDemoApplication) getApplication()).getDataLoggerInterface();
+            // TODO: 5/23/2018 describe bluetooth callback?
             bluetoothInterface = ((MyDemoApplication) getApplication()).getBluetoothInterface();
         } catch (BleNotSupportedException e) {
+            Log.d(TAG, "bluetooth not supported");
             e.printStackTrace();
         } catch (SdkNotAuthenticatedException e) {
+            Log.d(TAG, "SDK not authenticated");
             e.printStackTrace();
         }
+        // setting the scanning duration ( in milliseconds)
         dataLoggerInterface.setScanTime(5000);
 
         scanButton.setOnClickListener(new View.OnClickListener() {
@@ -120,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onOBDDevicesFoundEvent(OBDDevicesFoundEvent event) {
+        // adding the device to list anytime a new device is found and updating ui
         // TODO: 5/18/2018 maybe add scan complete callback
         dataLoggerInterface.scanForDataLoggers(false);
         selectedDatalogger = new DataLogger(event.deviceName, event.deviceAddress);
@@ -132,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onConnectionStatusChangeEvent(ConnectionStatusChangeEvent event) {
+        // updating the UI based on the connection status
         if (event.connectionStatus == DataLoggerInterface.STATE_CONNECTED) {
             listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.GREEN);
             Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
@@ -143,11 +157,13 @@ public class MainActivity extends AppCompatActivity {
                     resultIntent.putExtra("deviceAddress", selectedDatalogger.getAddress());
                     startActivity(resultIntent);
                 }
-            }, 500);
+            }, 150);
         } else if (event.connectionStatus == DataLoggerInterface.STATE_CONNECTING)
-            listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.DKGRAY);
-        else
+            listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.LTGRAY);
+        else if (event.connectionStatus == DataLoggerInterface.STATE_DISCONNECTED) {
+            Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
             listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.RED);
+        }
     }
 
 
@@ -158,8 +174,11 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        // good practice to disconnect from the datalogger when exiting
                         dataLoggerInterface.disconnect();
                         finish();
+                        // NOTE: System.exit should be called anytime the app closes as it initiates
+                        // garbage collection and clears up the singleton instances.
                         System.exit(0);
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -174,13 +193,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
+        // registering event bus to get event notifications
         EventBus.getDefault().register(this);
+        // changing the foreground flag for autoconnect to process in the background.
         ((MyDemoApplication) getApplication()).isAppInForeground = true;
+        init();
     }
 
     @Override
     public void onStop() {
         EventBus.getDefault().unregister(this);
+        // updating the flag so that the
         ((MyDemoApplication) getApplication()).isAppInForeground = false;
         super.onStop();
     }
@@ -188,7 +211,14 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAutoConnectingEvent(AutoConnectingEvent event) {
         selectedDatalogger = new DataLogger(event.deviceName, event.deviceAddress);
-        Toast.makeText(MainActivity.this, "Please wait, Auto Connect is in progress. Connecting to favorite device.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this, "Favorite device found! Please wait, trying to auto connect.", Toast.LENGTH_SHORT).show();
+    }
+
+    public void init() {
+        devices.clear();
+        selectedDatalogger = null;
+        listView.setVisibility(View.INVISIBLE);
+        lottieAnimationView.setVisibility(View.INVISIBLE);
     }
 
 }
