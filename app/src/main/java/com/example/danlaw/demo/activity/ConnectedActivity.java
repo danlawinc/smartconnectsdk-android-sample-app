@@ -97,10 +97,11 @@ public class ConnectedActivity extends AppCompatActivity {
                     favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
                 } else {
                     dataLoggerInterface.forgetDevice();
+                    favSwitch.setText("Auto connect not enabled for the connected device");
                 }
             }
         });
-        if (dataLoggerInterface.get)
+        favSwitch.setChecked(dataLoggerInterface.isFavDevice(dataLogger.getName(),dataLogger.getAddress()));
         eventPids.add(DataLoggerInterface.PID_EVENT_HARD_BRAKING);
         eventPids.add(DataLoggerInterface.PID_EVENT_HARD_ACCEL);
         // same pid should not be registered multiple times to avoid overwhelming datalogger

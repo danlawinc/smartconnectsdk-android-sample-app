@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAutoConnectingEvent(AutoConnectingEvent event) {
         selectedDatalogger = new DataLogger(event.deviceName, event.deviceAddress);
-        Toast.makeText(MainActivity.this, "Auto Connect in progress, connecting to favorite device.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this, "Please wait, Auto Connect is in progress. Connecting to favorite device.", Toast.LENGTH_SHORT).show();
     }
 
 }
