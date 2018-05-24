@@ -12,6 +12,9 @@ import com.example.danlaw.demo.model.DataLogger;
 
 import java.util.ArrayList;
 
+/**
+ * adapter for device list
+ */
 public class DeviceListAdapter extends BaseAdapter {
     private ArrayList<DataLogger> devices = new ArrayList<>();
     private Context context;

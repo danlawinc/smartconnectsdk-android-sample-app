@@ -98,8 +98,10 @@ public class MainActivity extends AppCompatActivity {
                 if (!tryingToConnect) {
                     selectedDevicePositionInList = position;
                     selectedDatalogger = new DataLogger(devices.get(position).getName(), devices.get(position).getAddress());
+
                     // cancelling the scan in case impatient user selects a device before the scan duration has completed
                     dataLoggerInterface.scanForDataLoggers(false);
+
                     // calling connect method from datalogger interface to initiate connection. SDK takes care of handling bluetooth connection in the background.
                     dataLoggerInterface.connect(devices.get(position).getAddress());
                     lottieAnimationView.setVisibility(View.INVISIBLE);
@@ -114,7 +116,8 @@ public class MainActivity extends AppCompatActivity {
 
             // getting the singleton datalogger interface to communicate with datalogger
             dataLoggerInterface = ((MyDemoApplication) getApplication()).getDataLoggerInterface();
-            // TODO: 5/23/2018 describe bluetooth callback?
+
+            // getting the singleton bluetooth interface to communicate with mobile's bluetooth ( detect if on/ turn on)
             bluetoothInterface = ((MyDemoApplication) getApplication()).getBluetoothInterface();
         } catch (BleNotSupportedException e) {
             Log.d(TAG, "bluetooth not supported");
@@ -131,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                     .setPositiveButton("Turn on", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+
                             // this method turns on the bluetooth for the user
                             bluetoothInterface.enableBluetooth();
                         }
@@ -145,11 +149,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // setting the scanning duration ( in milliseconds)
-        dataLoggerInterface.setScanTime(10000);
+        dataLoggerInterface.setScanTime(10000); // set to scan for 10 seconds
 
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                // resetting everything before starting scan
                 Toast.makeText(MainActivity.this, "Scanning for devices", Toast.LENGTH_SHORT).show();
                 devices.clear();
                 selectedDatalogger = null;
@@ -163,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onOBDDevicesFoundEvent(OBDDevicesFoundEvent event) {
+
         // adding the device to list anytime a new device is found and updating ui
         devices.add(new DataLogger(event.deviceName, event.deviceAddress));
         listView.setVisibility(View.VISIBLE);
@@ -171,11 +178,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onConnectionStatusChangeEvent(ConnectionStatusChangeEvent event) {
+
         // updating the UI based on the connection status
         switch (event.connectionStatus) {
             case DataLoggerInterface.STATE_CONNECTED:
                 listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.GREEN);
                 Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
+
+                // taking user to the next screen
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -204,9 +214,11 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        // good practice to disconnect from the datalogger when exiting
+
+                        // as a good practice always call disconnect before exiting the app, this closes all the connections
                         dataLoggerInterface.disconnect();
                         finish();
+
                         // NOTE: System.exit should be called anytime the app closes as it initiates
                         // garbage collection and clears up the singleton instances.
                         System.exit(0);
@@ -223,8 +235,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
+
         // registering event bus to get event notifications
         EventBus.getDefault().register(this);
+
         // changing the foreground flag for autoconnect to process in the background.
         ((MyDemoApplication) getApplication()).isAppInForeground = true;
         init();
@@ -232,19 +246,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onStop() {
+        // un-registering event bus in this activity so that this activity does not continue to get updates once the user has navigated away from this screen.
         EventBus.getDefault().unregister(this);
-        // updating the flag so that the
+        // updating the flag so that if needed, autoconnect can process in the background.
         ((MyDemoApplication) getApplication()).isAppInForeground = false;
         super.onStop();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAutoConnectingEvent(AutoConnectingEvent event) {
+
+        // called when sdk tries to auto connect to a device set as favorite
         selectedDatalogger = new DataLogger(event.deviceName, event.deviceAddress);
         Toast.makeText(MainActivity.this, "Favorite device found! Please wait, trying to auto connect.", Toast.LENGTH_SHORT).show();
     }
 
     public void init() {
+
+        // initializing the activity
         devices.clear();
         selectedDatalogger = null;
         listView.setVisibility(View.INVISIBLE);
@@ -253,6 +272,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onBluetoothEnabledEvent(BluetoothEnabledEvent event) {
+
+        // called when bluetooth interface enables phone's bluetooth
         if (event.isEnabled) {
             Toast.makeText(MainActivity.this, "Bluetooth turned on", Toast.LENGTH_SHORT).show();
         }
@@ -261,6 +282,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onScanStoppedEvent(ScanStoppedEvent event) {
+        // called when the sdk stops scanning for datalogger.
+        // true is returned when scan timed out
+        // false when a connection is tried to be established before the scan duration timed out.
         if (event.scanTimeOut) {
             Toast.makeText(MainActivity.this, "Scan complete", Toast.LENGTH_SHORT).show();
             lottieAnimationView.setVisibility(View.INVISIBLE);

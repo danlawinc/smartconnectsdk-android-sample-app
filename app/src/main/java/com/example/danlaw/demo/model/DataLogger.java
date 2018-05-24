@@ -1,5 +1,8 @@
 package com.example.danlaw.demo.model;
 
+/**
+ * POJO for saving datalogger info
+ */
 public class DataLogger {
     private String name;
     private String address;

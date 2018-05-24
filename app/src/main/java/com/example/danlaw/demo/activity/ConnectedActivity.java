@@ -64,6 +64,7 @@ public class ConnectedActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connected);
         try {
+            //getting the singleton interfaces
             dataLoggerInterface = ((MyDemoApplication) getApplication()).getDataLoggerInterface();
             bluetoothInterface = ((MyDemoApplication) getApplication()).getBluetoothInterface();
         } catch (BleNotSupportedException e) {
@@ -94,14 +95,19 @@ public class ConnectedActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+
+                    // setting the device as favorite. Setting a device as favorite, enables auto connect
                     dataLoggerInterface.setFavoriteDevice(dataLogger.getName(), dataLogger.getAddress());
                     favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
                 } else {
+
+                    // removing the device as favorite - disabling auto connect
                     dataLoggerInterface.forgetDevice();
                     favSwitch.setText("Auto connect not enabled for the connected device");
                 }
             }
         });
+        // checking if the current device is a favorite device
         boolean isFav = dataLoggerInterface.isFavDevice(dataLogger.getName(), dataLogger.getAddress());
         if (isFav) {
             favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
@@ -224,18 +230,17 @@ public class ConnectedActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
-
-//        dont know about backstack because could be autoconnect so jsut clear and start a fresh task
-//        in intent
     }
 
     public void onDisconnectClicked(View view) {
+        // disconnecting from datalogger
         dataLoggerInterface.disconnect();
         finish();
     }
 
     @Override
     public void onStart() {
+        // registering event bus and updating flag so that auto connect doesn't get triggered in the background
         super.onStart();
         EventBus.getDefault().register(this);
         ((MyDemoApplication) getApplication()).isAppInForeground = true;
@@ -243,6 +248,7 @@ public class ConnectedActivity extends AppCompatActivity {
 
     @Override
     public void onStop() {
+        // un-registering event bus and updating flag so that auto connect gets triggered in the background
         EventBus.getDefault().unregister(this);
         ((MyDemoApplication) getApplication()).isAppInForeground = false;
         super.onStop();
@@ -250,15 +256,20 @@ public class ConnectedActivity extends AppCompatActivity {
 
     public void onBasicRequestClicked(View view) {
         Toast.makeText(this, "Requesting current fuel level", Toast.LENGTH_SHORT).show();
+
+        // requesting pid through basic channel. this is a polling api. app must check for updates
         dataLoggerInterface.readBasicPidData(DataLoggerInterface.PID_FUEL_LEVEL);
     }
 
     public void onEventPid(View view) {
+        // registering event. this is a push api. once registered, datalogger will send updates in realtime as they happen unless unregistered
+        // same events should not be registered twice as it can overwhelm the datalogger
         boolean registerEventPid = dataLoggerInterface.registerEventPid(eventPids);
         Toast.makeText(this, "Event pid registration result: " + String.valueOf(registerEventPid), Toast.LENGTH_SHORT).show();
     }
 
     public void onUnregisterEventPid(View view) {
+        // un-registering events
         boolean unregisterEventPid = dataLoggerInterface.unregisterEventPid(eventPids);
         Toast.makeText(this, "Event pid unregister result: " + String.valueOf(unregisterEventPid), Toast.LENGTH_SHORT).show();
     }
