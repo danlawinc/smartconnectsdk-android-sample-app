@@ -27,8 +27,10 @@ import com.example.danlaw.demo.MyDemoApplication;
 import com.example.danlaw.demo.R;
 import com.example.danlaw.demo.adapter.DeviceListAdapter;
 import com.example.danlaw.demo.events.AutoConnectingEvent;
+import com.example.danlaw.demo.events.BluetoothEnabledEvent;
 import com.example.danlaw.demo.events.ConnectionStatusChangeEvent;
 import com.example.danlaw.demo.events.OBDDevicesFoundEvent;
+import com.example.danlaw.demo.events.ScanStoppedEvent;
 import com.example.danlaw.demo.model.DataLogger;
 
 import org.greenrobot.eventbus.EventBus;
@@ -78,23 +80,29 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(permissions, REQUEST_CODE_ASK_PERMISSIONS);
             }
         }
+
         // setting up views
         scanButton = (Button) findViewById(R.id.scanButton);
         lottieAnimationView = (LottieAnimationView) findViewById(R.id.animation_view);
         lottieAnimationView.setAnimation("ripple_loading_animation.json");
         listView = (ListView) findViewById(R.id.devicesList);
+
         // setting device adapter to show list of devices found during scanning
         devicesAdapter = new DeviceListAdapter(getApplicationContext(), devices);
         listView.setAdapter(devicesAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
                 // update UI and try connecting to a device if any connection is not in progress.
                 if (!tryingToConnect) {
                     selectedDevicePositionInList = position;
                     selectedDatalogger = new DataLogger(devices.get(position).getName(), devices.get(position).getAddress());
+                    // cancelling the scan in case impatient user selects a device before the scan duration has completed
+                    dataLoggerInterface.scanForDataLoggers(false);
                     // calling connect method from datalogger interface to initiate connection. SDK takes care of handling bluetooth connection in the background.
                     dataLoggerInterface.connect(devices.get(position).getAddress());
+                    lottieAnimationView.setVisibility(View.INVISIBLE);
                     view.setBackgroundColor(Color.LTGRAY);
                     Toast.makeText(MainActivity.this, "Initiating connection", Toast.LENGTH_SHORT).show();
                 } else
@@ -103,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         try {
+
             // getting the singleton datalogger interface to communicate with datalogger
             dataLoggerInterface = ((MyDemoApplication) getApplication()).getDataLoggerInterface();
             // TODO: 5/23/2018 describe bluetooth callback?
@@ -114,12 +123,34 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "SDK not authenticated");
             e.printStackTrace();
         }
+
+        // checking if bluetooth not enabled display a dialog asking the user to turn on bluetooth
+        if (!bluetoothInterface.isBluetoothEnabled()) {
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Bluetooth needs to be turned on to scan for devices")
+                    .setPositiveButton("Turn on", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // this method turns on the bluetooth for the user
+                            bluetoothInterface.enableBluetooth();
+                        }
+                    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            }).setCancelable(true)
+                    .show();
+            Toast.makeText(this, "Bluetooth not turned on", Toast.LENGTH_LONG).show();
+        }
+
         // setting the scanning duration ( in milliseconds)
-        dataLoggerInterface.setScanTime(5000);
+        dataLoggerInterface.setScanTime(10000);
 
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "Scanning for devices", Toast.LENGTH_SHORT).show();
                 devices.clear();
                 selectedDatalogger = null;
                 listView.setVisibility(View.INVISIBLE);
@@ -133,12 +164,7 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onOBDDevicesFoundEvent(OBDDevicesFoundEvent event) {
         // adding the device to list anytime a new device is found and updating ui
-        // TODO: 5/18/2018 maybe add scan complete callback
-        dataLoggerInterface.scanForDataLoggers(false);
-        selectedDatalogger = new DataLogger(event.deviceName, event.deviceAddress);
-        devices.add(selectedDatalogger);
-        lottieAnimationView.cancelAnimation();
-        lottieAnimationView.setVisibility(View.GONE);
+        devices.add(new DataLogger(event.deviceName, event.deviceAddress));
         listView.setVisibility(View.VISIBLE);
         devicesAdapter.notifyDataSetChanged();
     }
@@ -146,23 +172,27 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onConnectionStatusChangeEvent(ConnectionStatusChangeEvent event) {
         // updating the UI based on the connection status
-        if (event.connectionStatus == DataLoggerInterface.STATE_CONNECTED) {
-            listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.GREEN);
-            Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Intent resultIntent = new Intent(getApplicationContext(), ConnectedActivity.class);
-                    resultIntent.putExtra("deviceName", selectedDatalogger.getName());
-                    resultIntent.putExtra("deviceAddress", selectedDatalogger.getAddress());
-                    startActivity(resultIntent);
-                }
-            }, 150);
-        } else if (event.connectionStatus == DataLoggerInterface.STATE_CONNECTING)
-            listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.LTGRAY);
-        else if (event.connectionStatus == DataLoggerInterface.STATE_DISCONNECTED) {
-            Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
-            listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.RED);
+        switch (event.connectionStatus) {
+            case DataLoggerInterface.STATE_CONNECTED:
+                listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.GREEN);
+                Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent resultIntent = new Intent(getApplicationContext(), ConnectedActivity.class);
+                        resultIntent.putExtra("deviceName", selectedDatalogger.getName());
+                        resultIntent.putExtra("deviceAddress", selectedDatalogger.getAddress());
+                        startActivity(resultIntent);
+                    }
+                }, 150);
+                break;
+            case DataLoggerInterface.STATE_DISCONNECTED:
+                Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
+                listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.RED);
+                break;
+            default:
+                listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.LTGRAY);
+                break;
         }
     }
 
@@ -221,4 +251,21 @@ public class MainActivity extends AppCompatActivity {
         lottieAnimationView.setVisibility(View.INVISIBLE);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onBluetoothEnabledEvent(BluetoothEnabledEvent event) {
+        if (event.isEnabled) {
+            Toast.makeText(MainActivity.this, "Bluetooth turned on", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onScanStoppedEvent(ScanStoppedEvent event) {
+        if (event.scanTimeOut) {
+            Toast.makeText(MainActivity.this, "Scan complete", Toast.LENGTH_SHORT).show();
+            lottieAnimationView.setVisibility(View.INVISIBLE);
+        } else {
+            Log.d("Scan stopped:", "an attempt to connect to a device was made before scan duration timed out");
+        }
+    }
 }

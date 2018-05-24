@@ -4,7 +4,6 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.support.multidex.MultiDexApplication;
 import android.support.v4.app.TaskStackBuilder;
-import android.util.Log;
 
 import com.danlaw.mobilegateway.auth.AuthInterface;
 import com.danlaw.mobilegateway.auth.IAuthCallback;
@@ -19,12 +18,10 @@ import com.danlaw.mobilegateway.exception.SdkNotAuthenticatedException;
 import com.example.danlaw.demo.activity.ConnectedActivity;
 import com.example.danlaw.demo.events.AutoConnectingEvent;
 import com.example.danlaw.demo.events.BasicDataReceivedEvent;
+import com.example.danlaw.demo.events.BluetoothEnabledEvent;
 import com.example.danlaw.demo.events.ConnectionStatusChangeEvent;
 import com.example.danlaw.demo.events.DPidDataReceivedEvent;
-import com.example.danlaw.demo.events.DPidRegisteredEvent;
-import com.example.danlaw.demo.events.DPidUnregisteredEvent;
 import com.example.danlaw.demo.events.EPidDataReceivedEvent;
-import com.example.danlaw.demo.events.EPidRegisteredEvent;
 import com.example.danlaw.demo.events.OBDDevicesFoundEvent;
 import com.example.danlaw.demo.events.ScanStoppedEvent;
 
@@ -78,18 +75,10 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
 
         @Override
         public void onDataPidRegistered(int responseCode, int DPid) {
-            DPidRegisteredEvent event = new DPidRegisteredEvent();
-            event.responseCode = responseCode;
-            event.dPid = DPid;
-            EventBus.getDefault().post(event);
         }
 
         @Override
         public void onDataPidUnregistered(int responseCode, int DPid) {
-            DPidUnregisteredEvent event = new DPidUnregisteredEvent();
-            event.responseCode = responseCode;
-            event.dPid = DPid;
-            EventBus.getDefault().post(event);
         }
 
         @Override
@@ -103,9 +92,6 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
 
         @Override
         public void onEventPidRegistered(int responseCode) {
-            EPidRegisteredEvent event = new EPidRegisteredEvent();
-            event.responseCode = responseCode;
-            EventBus.getDefault().post(event);
         }
 
         @Override
@@ -155,7 +141,9 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
     IBluetoothCallback iBluetoothCallback = new IBluetoothCallback() {
         @Override
         public void onBluetoothEnabled(boolean enabled) {
-            Log.v("BLE Callback - ", "ble enabled status: " + String.valueOf(enabled));
+            BluetoothEnabledEvent event = new BluetoothEnabledEvent();
+            event.isEnabled = enabled;
+            EventBus.getDefault().post(event);
         }
     };
 
