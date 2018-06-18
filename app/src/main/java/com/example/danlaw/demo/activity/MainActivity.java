@@ -16,9 +16,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.airbnb.lottie.LottieAnimationView;
 import com.danlaw.mobilegateway.bluetooth.BluetoothInterface;
 import com.danlaw.mobilegateway.datalogger.DataLoggerInterface;
 import com.danlaw.mobilegateway.exception.BleNotSupportedException;
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     int selectedDevicePositionInList = -1;
     DataLogger selectedDatalogger = null;
     Button scanButton;
-    LottieAnimationView lottieAnimationView;
+    ProgressBar scanningAnimation;
     DeviceListAdapter devicesAdapter;
     BluetoothInterface bluetoothInterface;
 
@@ -83,8 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
         // setting up views
         scanButton = (Button) findViewById(R.id.scanButton);
-        lottieAnimationView = (LottieAnimationView) findViewById(R.id.animation_view);
-        lottieAnimationView.setAnimation("ripple_loading_animation.json");
+        scanningAnimation = (ProgressBar) findViewById(R.id.animation_view);
         listView = (ListView) findViewById(R.id.devicesList);
 
         // setting device adapter to show list of devices found during scanning
@@ -104,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // calling connect method from datalogger interface to initiate connection. SDK takes care of handling bluetooth connection in the background.
                     dataLoggerInterface.connect(devices.get(position).getAddress());
-                    lottieAnimationView.setVisibility(View.INVISIBLE);
+                    scanningAnimation.setVisibility(View.GONE);
                     view.setBackgroundColor(Color.LTGRAY);
                     Toast.makeText(MainActivity.this, "Initiating connection", Toast.LENGTH_SHORT).show();
                 } else
@@ -150,21 +149,6 @@ public class MainActivity extends AppCompatActivity {
 
         // setting the scanning duration ( in milliseconds)
         dataLoggerInterface.setScanTime(10000); // set to scan for 10 seconds
-
-        scanButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                // resetting everything before starting scan
-                Toast.makeText(MainActivity.this, "Scanning for devices", Toast.LENGTH_SHORT).show();
-                devices.clear();
-                selectedDatalogger = null;
-                listView.setVisibility(View.INVISIBLE);
-                lottieAnimationView.setVisibility(View.VISIBLE);
-                lottieAnimationView.playAnimation();
-                dataLoggerInterface.scanForDataLoggers(true);
-            }
-        });
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -172,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
 
         // adding the device to list anytime a new device is found and updating ui
         devices.add(new DataLogger(event.deviceName, event.deviceAddress));
-        listView.setVisibility(View.VISIBLE);
         devicesAdapter.notifyDataSetChanged();
     }
 
@@ -194,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
                         resultIntent.putExtra("deviceAddress", selectedDatalogger.getAddress());
                         startActivity(resultIntent);
                     }
-                }, 150);
+                }, 500);
                 break;
             case DataLoggerInterface.STATE_DISCONNECTED:
                 Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
@@ -266,8 +249,10 @@ public class MainActivity extends AppCompatActivity {
         // initializing the activity
         devices.clear();
         selectedDatalogger = null;
-        listView.setVisibility(View.INVISIBLE);
-        lottieAnimationView.setVisibility(View.INVISIBLE);
+        scanningAnimation.setVisibility(View.GONE);
+        devicesAdapter.notifyDataSetChanged();
+        scanningAnimation.setVisibility(View.GONE);
+        scanButton.setVisibility(View.VISIBLE);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -287,9 +272,21 @@ public class MainActivity extends AppCompatActivity {
         // false when a connection is tried to be established before the scan duration timed out.
         if (event.scanTimeOut) {
             Toast.makeText(MainActivity.this, "Scan complete", Toast.LENGTH_SHORT).show();
-            lottieAnimationView.setVisibility(View.INVISIBLE);
+            scanButton.setVisibility(View.VISIBLE);
+            scanningAnimation.setVisibility(View.GONE);
         } else {
             Log.d("Scan stopped:", "an attempt to connect to a device was made before scan duration timed out");
         }
+    }
+
+    public void onScanButtonClicked(View view) {
+        // resetting everything before starting scan
+        Toast.makeText(MainActivity.this, "Scanning for devices", Toast.LENGTH_SHORT).show();
+        devices.clear();
+        devicesAdapter.notifyDataSetChanged();
+        selectedDatalogger = null;
+        scanningAnimation.setVisibility(View.VISIBLE);
+        dataLoggerInterface.scanForDataLoggers(true);
+        scanButton.setVisibility(View.INVISIBLE);
     }
 }

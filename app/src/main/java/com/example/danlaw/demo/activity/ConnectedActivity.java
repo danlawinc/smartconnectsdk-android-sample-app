@@ -273,4 +273,17 @@ public class ConnectedActivity extends AppCompatActivity {
         boolean unregisterEventPid = dataLoggerInterface.unregisterEventPid(eventPids);
         Toast.makeText(this, "Event pid unregister result: " + String.valueOf(unregisterEventPid), Toast.LENGTH_SHORT).show();
     }
+
+    public void onBasicInfoClicked(View view) {
+        new AlertDialog.Builder(ConnectedActivity.this)
+                .setTitle("Basic Help")
+                .setMessage("helper text")
+                .setPositiveButton("Got it!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).setCancelable(true)
+                .show();
+    }
 }

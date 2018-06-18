@@ -1,153 +1,213 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
-    android:orientation="vertical"
     tools:context="com.example.danlaw.demo.activity.ConnectedActivity">
 
-    <RelativeLayout
+    <TextView
+        android:id="@+id/connectedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="8dp"
+        android:text="CONNECTED TO DATALOGGER"
+        android:textSize="23sp"
+        android:textStyle="bold" />
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardView2"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="10dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:layout_below="@id/connectedText"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
 
-        <TextView
-            android:id="@+id/connectedText"
-            android:layout_width="wrap_content"
+        app:cardCornerRadius="6dp"
+        app:cardElevation="6dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:text="CONNECTED TO DATA LOGGER"
-            android:textSize="23sp"
-            android:textStyle="bold|italic" />
+            android:layout_margin="10dp">
 
-        <Switch
-            android:id="@+id/favSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/connectedText"
-            android:layout_centerHorizontal="true"
-            android:layout_margin="8dp"
-            android:checked="false"
-            tools:checked="false" />
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/basicString"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Basic Data Channel Example" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                app:srcCompat="@drawable/ic_info_outline_black_24dp"
+                android:layout_alignBottom="@id/basicString"
+                android:onClick="onBasicInfoClicked"/>
 
-    <RelativeLayout
+            <Button
+                android:id="@+id/basicButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/basicString"
+                android:layout_margin="5dp"
+                android:onClick="onBasicRequestClicked"
+                android:text="Get Fuel Level" />
+
+            <TextView
+                android:id="@+id/fuelLevelValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@id/basicButton"
+                android:layout_alignParentEnd="true"
+                android:layout_margin="5dp"
+                android:text="FUEL: --"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardView4"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="10dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cardView2"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
 
-        <Button
-            android:layout_width="wrap_content"
+        app:cardCornerRadius="6dp"
+        app:cardElevation="6dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:onClick="onBasicRequestClicked"
-            android:text="Get Current Fuel Level" />
+            android:layout_margin="10dp">
 
-        <TextView
-            android:id="@+id/fuelLevelValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:text="FUEL: --"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/advancedString"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Advanced Data Channel Example" />
 
-    <RelativeLayout
+            <Button
+                android:id="@+id/registerAdvancedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/advancedString"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="5dp"
+                android:text="Register Data Pids" />
+
+            <Button
+                android:id="@+id/unRegisterAdvancedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/registerAdvancedButton"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="5dp"
+                android:text="Unregister Data Pid" />
+
+
+            <TextView
+                android:id="@+id/speedTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/registerAdvancedButton"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="5dp"
+                android:text="SPEED: --"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/rpmTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/unRegisterAdvancedButton"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="5dp"
+                android:text="RPM: --"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardView6"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="10dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cardView4"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
 
-        <Button
-            android:id="@+id/registerAdvancedButton"
-            android:layout_width="wrap_content"
+        app:cardCornerRadius="6dp"
+        app:cardElevation="6dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:text="Request Advanced Pid" />
+            android:layout_margin="10dp">
 
-        <Button
-            android:id="@+id/unRegisterAdvancedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:text="Stop Advanced Pid" />
+            <TextView
+                android:id="@+id/eventString"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Advanced Data Channel Example" />
 
+            <Button
+                android:id="@+id/EventPidRequestButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/eventString"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="5dp"
+                android:onClick="onEventPid"
+                android:text="Register Event Pids" />
 
-        <TextView
-            android:id="@+id/speedTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true"
-            android:text="SPEED: --"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/EventPidRequestButton"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="5dp"
+                android:onClick="onUnregisterEventPid"
+                android:text="Unregister Event Pids" />
 
-        <TextView
-            android:id="@+id/rpmTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:text="RPM: --"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/eventDescriptionTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="--"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="10dp"
-        android:layout_weight="1">
+    <Switch
+        android:id="@+id/favSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/cardView6"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="8dp"
+        android:checked="false"
+        tools:checked="false" />
 
-        <Button
-            android:id="@+id/EventPidRequestButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:onClick="onEventPid"
-            android:text="Register Event Pid" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:onClick="onUnregisterEventPid"
-            android:text="Unregister Event Pid" />
-
-        <TextView
-            android:id="@+id/eventDescriptionTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:text="--"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:onClick="onDisconnectClicked"
-            android:text="Disconnect" />
-    </RelativeLayout>
-
-</LinearLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/favSwitch"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:onClick="onDisconnectClicked"
+        android:text="Disconnect" />
+</RelativeLayout>
