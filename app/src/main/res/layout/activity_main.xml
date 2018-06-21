@@ -8,23 +8,42 @@
     android:background="@color/white"
     tools:context="com.example.danlaw.demo.activity.MainActivity">
 
-    <ImageView
+    <RelativeLayout
+        android:id="@+id/danlawLogoContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
         android:layout_weight="3.8"
-        app:srcCompat="@drawable/danlawlogo" />
+        android:layout_marginBottom="10dp"
+        android:gravity="center">
 
+        <ImageView
+            android:id="@+id/danlawLogo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            app:srcCompat="@drawable/danlawlogo" />
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/danlawLogo"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="-12dp"
+            android:gravity="center"
+            android:text="A U T O M O T I V E   M A D E   S M A R T"
+            android:textAlignment="center"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
 
     <ListView
         android:id="@+id/devicesList"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="15dp"
-        android:layout_weight="3.8"
-        android:background="@color/black" />
-
+        android:layout_weight="3.8"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
