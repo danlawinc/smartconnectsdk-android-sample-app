@@ -44,8 +44,8 @@ public class ConnectedActivity extends AppCompatActivity {
     boolean connected = true;
     DataLoggerInterface dataLoggerInterface;
     BluetoothInterface bluetoothInterface;
-    final int DPID_SPEED = 1;
-    final int DPID_RPM = 2;
+    final int DPID_SPEED_ID = 1;
+    final int DPID_RPM_ID = 2;
     ArrayList<Integer> dpidListSpeed;
     ArrayList<Integer> dpidListRPM;
     ArrayList<Integer> eventPids;
@@ -118,13 +118,16 @@ public class ConnectedActivity extends AppCompatActivity {
         eventPids.add(DataLoggerInterface.PID_EVENT_HARD_BRAKING);
         eventPids.add(DataLoggerInterface.PID_EVENT_HARD_ACCEL);
         // same pid should not be registered multiple times to avoid overwhelming datalogger
-        // pressing multiple times might cause app to behave unexpectedly
+
+        // pressing this multiple times might cause app to behave unexpectedly
         registerAdvancedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(v.getContext(), "Registering PIDs For Continuous Updates", Toast.LENGTH_LONG).show();
-                boolean registerSpeed = dataLoggerInterface.registerDataPid(DPID_SPEED, dpidListSpeed);
-                boolean registerRPM = dataLoggerInterface.registerDataPid(DPID_RPM, dpidListRPM);
+
+                // registering PIDs with their IDs
+                boolean registerSpeed = dataLoggerInterface.registerDataPid(DPID_SPEED_ID, dpidListSpeed);
+                boolean registerRPM = dataLoggerInterface.registerDataPid(DPID_RPM_ID, dpidListRPM);
 
                 if (registerSpeed && registerRPM) {
                     Log.d(TAG, " speed and rpm registered successfully");
@@ -138,8 +141,12 @@ public class ConnectedActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(v.getContext(), "UnRegistering PIDs", Toast.LENGTH_LONG).show();
-                dataLoggerInterface.unregisterDataPid(DPID_SPEED);
-                dataLoggerInterface.unregisterDataPid(DPID_RPM);
+
+                // unregistering PIDs with their IDs
+                dataLoggerInterface.unregisterDataPid(DPID_SPEED_ID);
+                dataLoggerInterface.unregisterDataPid(DPID_RPM_ID);
+                rpmTextView.setText("RPM: --");
+                speedTextView.setText("Speed: --");
             }
         });
 
@@ -148,6 +155,7 @@ public class ConnectedActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onConnectionStatusChangeEvent(ConnectionStatusChangeEvent event) {
         switch (event.connectionStatus) {
+            // listening for change in connection status
             case DataLoggerInterface.STATE_DISCONNECTED:
                 connected = false;
                 Toast.makeText(ConnectedActivity.this, "Connection lost", Toast.LENGTH_LONG).show();
@@ -160,8 +168,11 @@ public class ConnectedActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onBasicDataReceivedEvent(BasicDataReceivedEvent event) {
         switch (event.pid) {
+
+            // getting basic channel data and retrieving the value
             case DataLoggerInterface.PID_FUEL_LEVEL:
-                String fuel = "FUEL: " + ((FuelLevel) event.data).currentFuelLevel + ((FuelLevel) event.data).unit;
+                FuelLevel fuelData = (FuelLevel) event.data;
+                String fuel = "FUEL: " + fuelData.currentFuelLevel + fuelData.unit;
                 fuelTextView.setText(fuel);
                 break;
             default:
@@ -171,14 +182,15 @@ public class ConnectedActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAdvancedDataReceivedEvent(DPidDataReceivedEvent event) {
+        // getting ODB PID data from advanced data channel
         if (event.responseCode == RESPONSE_SUCCESS) {
             switch (event.DPid) {
-                case DPID_SPEED:
+                case DPID_SPEED_ID:
                     VehicleSpeed speed = (VehicleSpeed) event.PID_Data.get(PID_VEHICLE_SPEED);
                     String speedText = "Speed: " + String.valueOf(speed.value) + speed.unit;
                     speedTextView.setText(speedText);
                     break;
-                case DPID_RPM:
+                case DPID_RPM_ID:
                     EngineRPM engineRPM = (EngineRPM) event.PID_Data.get(PID_ENGINE_RPM);
                     String rpmText = "RPM: " + String.valueOf(engineRPM.value) + engineRPM.unit;
                     rpmTextView.setText(rpmText);
@@ -193,6 +205,7 @@ public class ConnectedActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventDataReceived(EPidDataReceivedEvent event) {
+        // getting event data from advanced channel
         String eventDescription = "--";
         switch (event.EPid) {
             case DataLoggerInterface.PID_EVENT_HARD_BRAKING:
@@ -211,6 +224,7 @@ public class ConnectedActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        // alerting the user before finishing activity
         if (connected) {
             new AlertDialog.Builder(ConnectedActivity.this)
                     .setTitle("Do you want to disconnect from DataLogger?")
@@ -257,12 +271,14 @@ public class ConnectedActivity extends AppCompatActivity {
     public void onBasicRequestClicked(View view) {
         Toast.makeText(this, "Requesting current fuel level", Toast.LENGTH_SHORT).show();
 
-        // requesting pid through basic channel. this is a polling api. app must check for updates
+        // requesting pid through basic channel.
+        // datalogger does not provide continuous updates for pids provided through basic data channel
         dataLoggerInterface.readBasicPidData(DataLoggerInterface.PID_FUEL_LEVEL);
     }
 
     public void onEventPid(View view) {
-        // registering event. this is a push api. once registered, datalogger will send updates in realtime as they happen unless unregistered
+        // registering event.
+        // once registered, datalogger will send updates in real-time as they happen unless unregistered
         // same events should not be registered twice as it can overwhelm the datalogger
         boolean registerEventPid = dataLoggerInterface.registerEventPid(eventPids);
         Toast.makeText(this, "Event pid registration result: " + String.valueOf(registerEventPid), Toast.LENGTH_SHORT).show();
@@ -271,19 +287,51 @@ public class ConnectedActivity extends AppCompatActivity {
     public void onUnregisterEventPid(View view) {
         // un-registering events
         boolean unregisterEventPid = dataLoggerInterface.unregisterEventPid(eventPids);
+        eventDescriptionView.setText("--");
         Toast.makeText(this, "Event pid unregister result: " + String.valueOf(unregisterEventPid), Toast.LENGTH_SHORT).show();
     }
 
-    public void onBasicInfoClicked(View view) {
-        new AlertDialog.Builder(ConnectedActivity.this)
-                .setTitle("Basic Help")
-                .setMessage("helper text")
-                .setPositiveButton("Got it!", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                }).setCancelable(true)
-                .show();
+    // click handlers for more info
+    public void onMoreInfoClicked(View view) {
+        switch (view.getId()) {
+            case R.id.basicChannelDataPidInfo:
+                new AlertDialog.Builder(ConnectedActivity.this)
+                        .setTitle(R.string.basic_header)
+                        .setMessage(R.string.basic_info)
+                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).setCancelable(true)
+                        .show();
+                break;
+            case R.id.advancedChannelDataPidInfo:
+                new AlertDialog.Builder(ConnectedActivity.this)
+                        .setTitle(R.string.advanced_header_data)
+                        .setMessage(R.string.advanced_info_data)
+                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).setCancelable(true)
+                        .show();
+                break;
+            case R.id.advancedChannelEventPidInfo:
+                new AlertDialog.Builder(ConnectedActivity.this)
+                        .setTitle(R.string.advanced_header_events)
+                        .setMessage(R.string.advanced_info_events)
+                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).setCancelable(true)
+                        .show();
+                break;
+            default:
+                break;
+        }
     }
 }

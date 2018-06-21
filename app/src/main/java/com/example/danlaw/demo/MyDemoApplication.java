@@ -30,11 +30,23 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
+/**
+ * If an app wants to implement autoconnect, it must create
+ * an application class that extends from android's application class and implement autoconnect
+ */
 public class MyDemoApplication extends MultiDexApplication implements AutoConnectApp, IAuthCallback {
 
     private static final String DEFAULT_API_KEY = "043a1b36163fa53cba313b6d92101035f545d6a0082935134cbcf3398569882647733a57e08189d8514277ef0f13522f";
     public boolean isAppInForeground = false;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        // Validate token must be the first call to the sdk.
+        AuthInterface.validateToken(this, DEFAULT_API_KEY, this);
+    }
+
     private IDataLoggerCallback iDataLoggerCallback = new IDataLoggerCallback() {
         @Override
         public void onOBDDeviceFound(String deviceName, String deviceAddress) {
@@ -147,12 +159,6 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
         }
     };
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        AuthInterface.validateToken(this, DEFAULT_API_KEY, this);
-    }
-
     public BluetoothInterface getBluetoothInterface() throws BleNotSupportedException, SdkNotAuthenticatedException {
         return BluetoothInterface.getInstance(this, iBluetoothCallback);
     }
@@ -163,12 +169,12 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
 
     @Override
     public String getNotificationTitle() {
-        return "Connected to Datalogger";
+        return "Connected to DataLogger";
     }
 
     @Override
     public String getNotificationText() {
-        return "Click to open demo app";
+        return "Click to open the app";
     }
 
     @Override

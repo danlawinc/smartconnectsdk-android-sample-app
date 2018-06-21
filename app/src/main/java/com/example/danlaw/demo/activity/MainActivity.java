@@ -98,10 +98,8 @@ public class MainActivity extends AppCompatActivity {
                     selectedDevicePositionInList = position;
                     selectedDatalogger = new DataLogger(devices.get(position).getName(), devices.get(position).getAddress());
 
-                    // cancelling the scan in case impatient user selects a device before the scan duration has completed
-                    dataLoggerInterface.scanForDataLoggers(false);
-
                     // calling connect method from datalogger interface to initiate connection. SDK takes care of handling bluetooth connection in the background.
+                    // trying to connect to a device if scanning is in progress will also stop scanning
                     dataLoggerInterface.connect(devices.get(position).getAddress());
                     scanningAnimation.setVisibility(View.GONE);
                     view.setBackgroundColor(Color.LTGRAY);
@@ -180,6 +178,9 @@ public class MainActivity extends AppCompatActivity {
                 }, 500);
                 break;
             case DataLoggerInterface.STATE_DISCONNECTED:
+            case DataLoggerInterface.STATE_CONNECTION_FAILURE:
+            case DataLoggerInterface.STATE_CHECKING_HEALTH_STATUS_FAILED:
+            case DataLoggerInterface.STATE_AUTHENTICATION_FAILED:
                 Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
                 listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.RED);
                 break;
