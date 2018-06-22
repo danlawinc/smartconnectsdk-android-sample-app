@@ -4,7 +4,7 @@ android {
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
     defaultConfig {
-        applicationId "com.example.danlaw.demo"
+        applicationId "com.danlaw.smartconnect.sdk.sampleapp"
         minSdkVersion 19
         targetSdkVersion 27
         versionCode 1
@@ -23,7 +23,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    api(name: 'mobilegateway-release', ext: 'aar')
+    api(name: 'smart-connect-sdk-release', ext: 'aar')
     testImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })

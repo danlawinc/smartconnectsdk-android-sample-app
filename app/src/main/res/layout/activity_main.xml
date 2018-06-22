@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/white"
-    tools:context="com.example.danlaw.demo.activity.MainActivity">
+    tools:context="com.danlaw.smartconnect.sdk.sampleapp.activity.MainActivity">
 
     <RelativeLayout
         android:id="@+id/danlawLogoContainer"

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:cardBackgroundColor="@color/white"
-    tools:context="com.example.danlaw.demo.activity.ConnectedActivity">
+    tools:context="com.danlaw.smartconnect.sdk.sampleapp.activity.ConnectedActivity">
 
     <TextView
         android:id="@+id/connectedText"
