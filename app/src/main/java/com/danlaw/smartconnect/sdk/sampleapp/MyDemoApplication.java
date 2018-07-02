@@ -4,17 +4,19 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.support.multidex.MultiDexApplication;
 import android.support.v4.app.TaskStackBuilder;
+import android.util.Log;
 
-import com.danlaw.mobilegateway.auth.AuthInterface;
-import com.danlaw.mobilegateway.auth.IAuthCallback;
-import com.danlaw.mobilegateway.bluetooth.BluetoothInterface;
-import com.danlaw.mobilegateway.bluetooth.IBluetoothCallback;
-import com.danlaw.mobilegateway.datalogger.AutoConnectApp;
-import com.danlaw.mobilegateway.datalogger.DataLoggerInterface;
-import com.danlaw.mobilegateway.datalogger.IDataLoggerCallback;
-import com.danlaw.mobilegateway.datalogger.model.Message;
-import com.danlaw.mobilegateway.exception.BleNotSupportedException;
-import com.danlaw.mobilegateway.exception.SdkNotAuthenticatedException;
+import com.danlaw.smartconnect.sdk.sampleapp.events.AuthEvent;
+import com.danlaw.smartconnectsdk.auth.AuthInterface;
+import com.danlaw.smartconnectsdk.auth.IAuthCallback;
+import com.danlaw.smartconnectsdk.bluetooth.BluetoothInterface;
+import com.danlaw.smartconnectsdk.bluetooth.IBluetoothCallback;
+import com.danlaw.smartconnectsdk.datalogger.AutoConnectApp;
+import com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface;
+import com.danlaw.smartconnectsdk.datalogger.IDataLoggerCallback;
+import com.danlaw.smartconnectsdk.datalogger.model.Message;
+import com.danlaw.smartconnectsdk.exception.BleNotSupportedException;
+import com.danlaw.smartconnectsdk.exception.SdkNotAuthenticatedException;
 import com.danlaw.smartconnect.sdk.sampleapp.activity.ConnectedActivity;
 import com.danlaw.smartconnect.sdk.sampleapp.events.AutoConnectingEvent;
 import com.danlaw.smartconnect.sdk.sampleapp.events.BasicDataReceivedEvent;
@@ -149,7 +151,10 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
         @Override
         public void onWifiList(ArrayList<String> SSIDs) {
         }
-    };
+        @Override
+        public void onBleapFotaResponse(boolean b, String[] strings) {
+        }
+        };
     IBluetoothCallback iBluetoothCallback = new IBluetoothCallback() {
         @Override
         public void onBluetoothEnabled(boolean enabled) {
@@ -207,6 +212,9 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
 
     @Override
     public void onAuthenticationResult(int i, String s) {
-
+        AuthEvent event = new AuthEvent();
+        event.code = i;
+        event.message = s;
+        EventBus.getDefault().post(event);
     }
 }
