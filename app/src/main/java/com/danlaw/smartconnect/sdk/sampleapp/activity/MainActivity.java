@@ -19,10 +19,11 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.danlaw.mobilegateway.bluetooth.BluetoothInterface;
-import com.danlaw.mobilegateway.datalogger.DataLoggerInterface;
-import com.danlaw.mobilegateway.exception.BleNotSupportedException;
-import com.danlaw.mobilegateway.exception.SdkNotAuthenticatedException;
+import com.danlaw.smartconnect.sdk.sampleapp.events.AuthEvent;
+import com.danlaw.smartconnectsdk.bluetooth.BluetoothInterface;
+import com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface;
+import com.danlaw.smartconnectsdk.exception.BleNotSupportedException;
+import com.danlaw.smartconnectsdk.exception.SdkNotAuthenticatedException;
 import com.danlaw.smartconnect.sdk.sampleapp.MyDemoApplication;
 import com.danlaw.smartconnect.sdk.sampleapp.R;
 import com.danlaw.smartconnect.sdk.sampleapp.adapter.DeviceListAdapter;
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] REQUIRED_SDK_PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION};
     final private String TAG = MainActivity.class.getCanonicalName();
+    private boolean setupComplete = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +82,9 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(permissions, REQUEST_CODE_ASK_PERMISSIONS);
             }
         }
+    }
 
+    private void setup() {
         // setting up views
         scanButton = (Button) findViewById(R.id.scanButton);
         scanningAnimation = (ProgressBar) findViewById(R.id.animation_view);
@@ -147,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
 
         // setting the scanning duration ( in milliseconds)
         dataLoggerInterface.setScanTime(10000); // set to scan for 10 seconds
+        setupComplete = true;
+        init();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -225,7 +231,8 @@ public class MainActivity extends AppCompatActivity {
 
         // changing the foreground flag for autoconnect to process in the background.
         ((MyDemoApplication) getApplication()).isAppInForeground = true;
-        init();
+        if (setupComplete)
+            init();
     }
 
     @Override
@@ -289,5 +296,16 @@ public class MainActivity extends AppCompatActivity {
         scanningAnimation.setVisibility(View.VISIBLE);
         dataLoggerInterface.scanForDataLoggers(true);
         scanButton.setVisibility(View.INVISIBLE);
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onAuthEvent(AuthEvent event) {
+        // called when the sdk stops scanning for datalogger.
+        // true is returned when scan timed out
+        // false when a connection is tried to be established before the scan duration timed out.
+        if (event.code == 200) {
+            setup();
+        } else {
+            Log.d("Auth: ", event.message);
+        }
     }
 }
