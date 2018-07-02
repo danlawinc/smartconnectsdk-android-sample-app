@@ -12,15 +12,15 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.danlaw.mobilegateway.bluetooth.BluetoothInterface;
-import com.danlaw.mobilegateway.datalogger.DataLoggerInterface;
-import com.danlaw.mobilegateway.datalogger.model.EngineRPM;
-import com.danlaw.mobilegateway.datalogger.model.FuelLevel;
-import com.danlaw.mobilegateway.datalogger.model.HardAccelerationData;
-import com.danlaw.mobilegateway.datalogger.model.HardBrakingData;
-import com.danlaw.mobilegateway.datalogger.model.VehicleSpeed;
-import com.danlaw.mobilegateway.exception.BleNotSupportedException;
-import com.danlaw.mobilegateway.exception.SdkNotAuthenticatedException;
+import com.danlaw.smartconnectsdk.bluetooth.BluetoothInterface;
+import com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface;
+import com.danlaw.smartconnectsdk.datalogger.model.EngineRPM;
+import com.danlaw.smartconnectsdk.datalogger.model.FuelLevel;
+import com.danlaw.smartconnectsdk.datalogger.model.HardAccelerationData;
+import com.danlaw.smartconnectsdk.datalogger.model.HardBrakingData;
+import com.danlaw.smartconnectsdk.datalogger.model.VehicleSpeed;
+import com.danlaw.smartconnectsdk.exception.BleNotSupportedException;
+import com.danlaw.smartconnectsdk.exception.SdkNotAuthenticatedException;
 import com.danlaw.smartconnect.sdk.sampleapp.MyDemoApplication;
 import com.danlaw.smartconnect.sdk.sampleapp.R;
 import com.danlaw.smartconnect.sdk.sampleapp.events.BasicDataReceivedEvent;
@@ -35,9 +35,9 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 
-import static com.danlaw.mobilegateway.datalogger.DataLoggerInterface.PID_ENGINE_RPM;
-import static com.danlaw.mobilegateway.datalogger.DataLoggerInterface.PID_VEHICLE_SPEED;
-import static com.danlaw.mobilegateway.datalogger.IDataLoggerCallback.RESPONSE_SUCCESS;
+import static com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface.PID_ENGINE_RPM;
+import static com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface.PID_VEHICLE_SPEED;
+import static com.danlaw.smartconnectsdk.datalogger.IDataLoggerCallback.RESPONSE_SUCCESS;
 
 public class ConnectedActivity extends AppCompatActivity {
 
@@ -322,6 +322,18 @@ public class ConnectedActivity extends AppCompatActivity {
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.advanced_header_events)
                         .setMessage(R.string.advanced_info_events)
+                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).setCancelable(true)
+                        .show();
+                break;
+            case R.id.autoConnectInfo:
+                new AlertDialog.Builder(ConnectedActivity.this)
+                        .setTitle(R.string.autoconnect_header)
+                        .setMessage(R.string.autoconnect_info)
                         .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
