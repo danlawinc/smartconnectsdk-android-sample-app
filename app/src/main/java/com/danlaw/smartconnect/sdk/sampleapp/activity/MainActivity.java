@@ -151,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
 
         // setting the scanning duration ( in milliseconds)
         dataLoggerInterface.setScanTime(10000); // set to scan for 10 seconds
+
+        // changing flag for onStart to update ui
         setupComplete = true;
         init();
     }
@@ -231,6 +233,8 @@ public class MainActivity extends AppCompatActivity {
 
         // changing the foreground flag for autoconnect to process in the background.
         ((MyDemoApplication) getApplication()).isAppInForeground = true;
+
+        // checking flag to make sure app has references to all the views before updating them.
         if (setupComplete)
             init();
     }
@@ -297,11 +301,11 @@ public class MainActivity extends AppCompatActivity {
         dataLoggerInterface.scanForDataLoggers(true);
         scanButton.setVisibility(View.INVISIBLE);
     }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAuthEvent(AuthEvent event) {
-        // called when the sdk stops scanning for datalogger.
-        // true is returned when scan timed out
-        // false when a connection is tried to be established before the scan duration timed out.
+        // called when the sdk gets results for auth.
+        // status 200 means auth was successful
         if (event.code == 200) {
             setup();
         } else {
