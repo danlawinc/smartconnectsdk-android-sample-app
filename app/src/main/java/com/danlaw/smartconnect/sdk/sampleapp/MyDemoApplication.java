@@ -38,7 +38,7 @@ import java.util.HashMap;
  */
 public class MyDemoApplication extends MultiDexApplication implements AutoConnectApp, IAuthCallback {
 
-    private static final String DEFAULT_API_KEY = YOUR API KEY;
+    private static final String DEFAULT_API_KEY = "YOUR API KEY";
     public boolean isAppInForeground = false;
 
     @Override
