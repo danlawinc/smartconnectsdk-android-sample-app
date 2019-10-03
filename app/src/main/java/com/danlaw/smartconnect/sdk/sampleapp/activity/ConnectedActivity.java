@@ -1,13 +1,21 @@
 package com.danlaw.smartconnect.sdk.sampleapp.activity;
 
+import android.app.Notification;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,6 +24,7 @@ import com.danlaw.smartconnectsdk.bluetooth.BluetoothInterface;
 import com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface;
 import com.danlaw.smartconnectsdk.datalogger.model.EngineRPM;
 import com.danlaw.smartconnectsdk.datalogger.model.FuelLevel;
+import com.danlaw.smartconnectsdk.datalogger.model.GPS;
 import com.danlaw.smartconnectsdk.datalogger.model.HardAccelerationData;
 import com.danlaw.smartconnectsdk.datalogger.model.HardBrakingData;
 import com.danlaw.smartconnectsdk.datalogger.model.VehicleSpeed;
@@ -49,7 +58,7 @@ public class ConnectedActivity extends AppCompatActivity {
     ArrayList<Integer> dpidListSpeed;
     ArrayList<Integer> dpidListRPM;
     ArrayList<Integer> eventPids;
-    TextView fuelTextView;
+    TextView fuelTextView, latitudeTextView, longitudeTextView;
     TextView speedTextView;
     TextView rpmTextView;
     TextView eventDescriptionView;
@@ -58,6 +67,7 @@ public class ConnectedActivity extends AppCompatActivity {
     Switch favSwitch;
     DataLogger dataLogger;
     final private String TAG = ConnectedActivity.class.getCanonicalName();
+    LinearLayout batteryOptimizationContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,9 +94,12 @@ public class ConnectedActivity extends AppCompatActivity {
         dpidListSpeed.add(DataLoggerInterface.PID_VEHICLE_SPEED);
         dpidListRPM.add(DataLoggerInterface.PID_ENGINE_RPM);
         fuelTextView = (TextView) findViewById(R.id.fuelLevelValue);
+        latitudeTextView = (TextView) findViewById(R.id.latValue);
+        longitudeTextView = (TextView) findViewById(R.id.longValue);
         speedTextView = (TextView) findViewById(R.id.speedTextView);
         rpmTextView = (TextView) findViewById(R.id.rpmTextView);
         favSwitch = (Switch) findViewById(R.id.favSwitch);
+        batteryOptimizationContainer = findViewById(R.id.batteryOptimizationContainer);
         eventDescriptionView = (TextView) findViewById(R.id.eventDescriptionTextView);
         registerAdvancedButton = (Button) findViewById(R.id.registerAdvancedButton);
         unRegisterAdvancedButton = (Button) findViewById(R.id.unRegisterAdvancedButton);
@@ -126,8 +139,14 @@ public class ConnectedActivity extends AppCompatActivity {
                 Toast.makeText(v.getContext(), "Registering PIDs For Continuous Updates", Toast.LENGTH_LONG).show();
 
                 // registering PIDs with their IDs
-                boolean registerSpeed = dataLoggerInterface.registerDataPid(DPID_SPEED_ID, dpidListSpeed);
-                boolean registerRPM = dataLoggerInterface.registerDataPid(DPID_RPM_ID, dpidListRPM);
+                boolean registerSpeed = false;
+                boolean registerRPM = false;
+                try {
+                    registerSpeed = dataLoggerInterface.registerDataPid(DPID_SPEED_ID, dpidListSpeed);
+                    registerRPM = dataLoggerInterface.registerDataPid(DPID_RPM_ID, dpidListRPM);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 if (registerSpeed && registerRPM) {
                     Log.d(TAG, " speed and rpm registered successfully");
@@ -143,8 +162,12 @@ public class ConnectedActivity extends AppCompatActivity {
                 Toast.makeText(v.getContext(), "UnRegistering PIDs", Toast.LENGTH_LONG).show();
 
                 // unregistering PIDs with their IDs
-                dataLoggerInterface.unregisterDataPid(DPID_SPEED_ID);
-                dataLoggerInterface.unregisterDataPid(DPID_RPM_ID);
+                try {
+                    dataLoggerInterface.unregisterDataPid(DPID_SPEED_ID);
+                    dataLoggerInterface.unregisterDataPid(DPID_RPM_ID);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 rpmTextView.setText("RPM: --");
                 speedTextView.setText("Speed: --");
             }
@@ -167,6 +190,7 @@ public class ConnectedActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onBasicDataReceivedEvent(BasicDataReceivedEvent event) {
+        Log.v(TAG, "Basic data received: " + event.responseCode);
         switch (event.pid) {
 
             // getting basic channel data and retrieving the value
@@ -174,6 +198,14 @@ public class ConnectedActivity extends AppCompatActivity {
                 FuelLevel fuelData = (FuelLevel) event.data;
                 String fuel = "FUEL: " + fuelData.currentFuelLevel + fuelData.unit;
                 fuelTextView.setText(fuel);
+                break;
+
+            case DataLoggerInterface.PID_GPS:
+                GPS gpsData = (GPS) event.data;
+                String latitude = "LAT: " + gpsData.latitude;
+                String longitude = "LONG: " + gpsData.longitude;
+                latitudeTextView.setText(latitude);
+                longitudeTextView.setText(longitude);
                 break;
             default:
                 break;
@@ -268,15 +300,15 @@ public class ConnectedActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    public void onBasicRequestClicked(View view) {
+    public void onBasicRequestClicked(View view) throws InterruptedException {
         Toast.makeText(this, "Requesting current fuel level", Toast.LENGTH_SHORT).show();
-
+        fuelTextView.setText(("FUEL: --"));
         // requesting pid through basic channel.
         // datalogger does not provide continuous updates for pids provided through basic data channel
         dataLoggerInterface.readBasicPidData(DataLoggerInterface.PID_FUEL_LEVEL);
     }
 
-    public void onEventPid(View view) {
+    public void onEventPid(View view) throws InterruptedException {
         // registering event.
         // once registered, datalogger will send updates in real-time as they happen unless unregistered
         // same events should not be registered twice as it can overwhelm the datalogger
@@ -284,7 +316,7 @@ public class ConnectedActivity extends AppCompatActivity {
         Toast.makeText(this, "Event pid registration result: " + String.valueOf(registerEventPid), Toast.LENGTH_SHORT).show();
     }
 
-    public void onUnregisterEventPid(View view) {
+    public void onUnregisterEventPid(View view) throws InterruptedException {
         // un-registering events
         boolean unregisterEventPid = dataLoggerInterface.unregisterEventPid(eventPids);
         eventDescriptionView.setText("--");
@@ -345,5 +377,43 @@ public class ConnectedActivity extends AppCompatActivity {
             default:
                 break;
         }
+    }
+
+    public void onBatteryOptimizationClicked(View view) {
+        String packageName = getResources().getString(R.string.app_name);
+        Toast.makeText(this, "All apps -> " + packageName + " -> Don't optimize", Toast.LENGTH_LONG).show();
+
+        Intent intent = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+        }
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String packageName = getPackageName();
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // might have battery optimization
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                batteryOptimizationContainer.setVisibility(View.VISIBLE);
+            } else {
+                batteryOptimizationContainer.setVisibility(View.GONE);
+            }
+        } else {
+            batteryOptimizationContainer.setVisibility(View.GONE);
+        }
+    }
+
+    public void onGPSClicked(View view) throws InterruptedException {
+        Toast.makeText(this, "Requesting current GPS coordinates", Toast.LENGTH_SHORT).show();
+
+        latitudeTextView.setText("LAT: --");
+        longitudeTextView.setText("LONG: --");
+        // requesting pid through basic channel.
+        // datalogger does not provide continuous updates for pids provided through basic data channel
+        dataLoggerInterface.readBasicPidData(DataLoggerInterface.PID_GPS);
     }
 }
