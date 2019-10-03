@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:cardBackgroundColor="@color/white"
+    android:layout_height="match_parent">
+<RelativeLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
     tools:context="com.danlaw.smartconnect.sdk.sampleapp.activity.ConnectedActivity">
 
     <TextView
@@ -18,7 +22,7 @@
         android:textSize="23sp"
         android:textStyle="bold" />
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardView2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -50,30 +54,72 @@
                 android:padding="5dp"
                 app:srcCompat="@drawable/ic_info_outline_black_24dp" />
 
-            <Button
-                android:id="@+id/basicButton"
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/basicString"
-                android:layout_margin="5dp"
-                android:onClick="onBasicRequestClicked"
-                android:text="Get Fuel Level" />
+                android:id="@+id/fuelContainer"
+                android:layout_below="@+id/basicString">
 
-            <TextView
-                android:id="@+id/fuelLevelValue"
-                android:layout_width="wrap_content"
+                <Button
+                    android:id="@+id/basicButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:onClick="onBasicRequestClicked"
+                    android:text="Get Fuel Level" />
+
+                <TextView
+                    android:id="@+id/fuelLevelValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@+id/basicButton"
+                    android:layout_alignParentEnd="true"
+                    android:layout_margin="5dp"
+                    android:text="FUEL: --"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/basicButton"
-                android:layout_alignParentEnd="true"
-                android:layout_margin="5dp"
-                android:text="FUEL: --"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:id="@+id/gpsContainer"
+                android:layout_below="@+id/fuelContainer">
+
+                <Button
+                    android:id="@+id/gpsButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:layout_centerVertical="true"
+                    android:onClick="onGPSClicked"
+                    android:text="Get GPS" />
+
+                <TextView
+                    android:id="@+id/latValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@+id/gpsButton"
+                    android:layout_alignParentEnd="true"
+                    android:layout_margin="5dp"
+                    android:text="LAT: --"
+                    android:textSize="18sp"/>
+
+                <TextView
+                    android:id="@+id/longValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/latValue"
+                    android:layout_alignParentEnd="true"
+                    android:layout_margin="5dp"
+                    android:text="LONG: --"
+                    android:textSize="18sp" />
+            </RelativeLayout>
         </RelativeLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardView4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -196,9 +242,9 @@
                 android:textSize="22sp"
                 android:textStyle="bold" />
         </RelativeLayout>
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/cardView4"
@@ -236,15 +282,43 @@
                 android:checked="false"
                 tools:checked="false" />
 
+                <LinearLayout
+                    android:id="@+id/batteryOptimizationContainer"
+                    android:layout_below="@+id/favSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="8dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/autoConnectBatteryHelp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:paddingStart="5dp"
+                        android:paddingEnd="5dp"
+                        android:text="Battery optimization needs to be disabled for auto connect to work"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="onBatteryOptimizationClicked"
+                        android:text="Fix it" />
+
+                </LinearLayout>
+
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/favSwitch"
+                android:layout_below="@id/batteryOptimizationContainer"
                 android:layout_centerHorizontal="true"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
+                android:layout_margin="16dp"
                 android:onClick="onDisconnectClicked"
                 android:text="Disconnect" />
         </RelativeLayout>
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 </RelativeLayout>
+</ScrollView>
