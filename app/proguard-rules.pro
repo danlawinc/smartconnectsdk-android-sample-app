@@ -23,3 +23,26 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+-dontwarn **
+
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-dontpreverify
+-verbose
+
+# The -optimizations option disables some arithmetic simplifications that Dalvik 1.0 and 1.5 can't handle.
+-optimizations !code/simplification/arithmetic,!code/allocation/variable
+-keep class **
+-keepclassmembers class * { *; }
+-keepattributes *
+
+-keepclassmembers class ** {
+    @org.greenrobot.eventbus.Subscribe <methods>;
+}
+-keep enum org.greenrobot.eventbus.ThreadMode { *; }
+
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}

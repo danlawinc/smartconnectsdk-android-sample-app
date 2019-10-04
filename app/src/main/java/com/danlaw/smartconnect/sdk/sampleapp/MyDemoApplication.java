@@ -2,9 +2,8 @@ package com.danlaw.smartconnect.sdk.sampleapp;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.support.multidex.MultiDexApplication;
-import android.support.v4.app.TaskStackBuilder;
-import android.util.Log;
+import androidx.multidex.MultiDexApplication;
+import androidx.core.app.TaskStackBuilder;
 
 import com.danlaw.smartconnect.sdk.sampleapp.events.AuthEvent;
 import com.danlaw.smartconnectsdk.auth.AuthInterface;
@@ -38,7 +37,11 @@ import java.util.HashMap;
  */
 public class MyDemoApplication extends MultiDexApplication implements AutoConnectApp, IAuthCallback {
 
-    private static final String DEFAULT_API_KEY = "YOUR API KEY";
+    /**
+     * THIS KEY NEEDS TO BE CORRECT!
+     * using an invalid key/expired key will throw an exception.
+     * **/
+    private static final String DEFAULT_API_KEY = YOUR_API_KEY;
     public boolean isAppInForeground = false;
 
     @Override
@@ -151,10 +154,8 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
         @Override
         public void onWifiList(ArrayList<String> SSIDs) {
         }
-        @Override
-        public void onBleapFotaResponse(boolean b, String[] strings) {
-        }
         };
+
     IBluetoothCallback iBluetoothCallback = new IBluetoothCallback() {
         @Override
         public void onBluetoothEnabled(boolean enabled) {

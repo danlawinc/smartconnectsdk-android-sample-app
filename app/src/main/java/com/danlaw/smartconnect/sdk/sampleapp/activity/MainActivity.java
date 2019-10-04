@@ -7,9 +7,9 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -82,9 +82,7 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(permissions, REQUEST_CODE_ASK_PERMISSIONS);
             }
         }
-    }
 
-    private void setup() {
         // setting up views
         scanButton = (Button) findViewById(R.id.scanButton);
         scanningAnimation = (ProgressBar) findViewById(R.id.animation_view);
@@ -113,6 +111,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void setup() {
         try {
 
             // getting the singleton datalogger interface to communicate with datalogger
@@ -191,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
             case DataLoggerInterface.STATE_AUTHENTICATION_FAILED:
                 Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
                 listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.RED);
+                scanButton.setVisibility(View.VISIBLE);
                 break;
             default:
                 listView.getChildAt(selectedDevicePositionInList).setBackgroundColor(Color.LTGRAY);
@@ -253,6 +255,8 @@ public class MainActivity extends AppCompatActivity {
 
         // called when sdk tries to auto connect to a device set as favorite
         selectedDatalogger = new DataLogger(event.deviceName, event.deviceAddress);
+
+        selectedDevicePositionInList = devicesAdapter.getIndexByProperty(selectedDatalogger.getName());
         Toast.makeText(MainActivity.this, "Favorite device found! Please wait, trying to auto connect.", Toast.LENGTH_SHORT).show();
     }
 
