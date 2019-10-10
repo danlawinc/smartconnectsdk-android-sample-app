@@ -244,10 +244,70 @@
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
 
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cardView4"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+
+        app:cardCornerRadius="6dp"
+        app:cardElevation="6dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp">
+
+            <TextView
+                android:id="@+id/udpString"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/udp_header_data" />
+
+            <ImageView
+                android:id="@+id/udpChannelDataPidInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:onClick="onMoreInfoClicked"
+                android:padding="5dp"
+                app:srcCompat="@drawable/ic_info_outline_black_24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/udpString"
+                android:textSize="19sp"
+                android:layout_marginTop="10dp"
+                android:id="@+id/udpInfo"
+                android:text="Datalogger type: "/>
+
+
+
+            <TextView
+                android:id="@+id/udpValueTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_below="@id/udpInfo"
+                android:text="--"
+                android:layout_centerHorizontal="true"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+
+
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/cardView4"
+        android:layout_below="@+id/cardView5"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"

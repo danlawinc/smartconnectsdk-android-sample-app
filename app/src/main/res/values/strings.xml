@@ -10,4 +10,5 @@
     <string name="advanced_header_events">Advanced Data Channel - Event PIDs</string>
     <string name="autoconnect_info">If Auto Connect is turned on app will set the connected device as favorite and then the app will try to connect to the device automatically during any foreground or background (triggered by location change) scans.</string>
     <string name="autoconnect_header">Auto Connect</string>
+    <string name="udp_header_data">UDP Data Channel</string>
 </resources>
