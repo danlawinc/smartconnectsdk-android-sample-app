@@ -93,31 +93,28 @@ public class ConnectedActivity extends AppCompatActivity {
         eventPids = new ArrayList<>();
         dpidListSpeed.add(DataLoggerInterface.PID_VEHICLE_SPEED);
         dpidListRPM.add(DataLoggerInterface.PID_ENGINE_RPM);
-        fuelTextView = (TextView) findViewById(R.id.fuelLevelValue);
-        latitudeTextView = (TextView) findViewById(R.id.latValue);
-        longitudeTextView = (TextView) findViewById(R.id.longValue);
-        speedTextView = (TextView) findViewById(R.id.speedTextView);
-        rpmTextView = (TextView) findViewById(R.id.rpmTextView);
-        favSwitch = (Switch) findViewById(R.id.favSwitch);
+        fuelTextView = findViewById(R.id.fuelLevelValue);
+        latitudeTextView = findViewById(R.id.latValue);
+        longitudeTextView = findViewById(R.id.longValue);
+        speedTextView = findViewById(R.id.speedTextView);
+        rpmTextView = findViewById(R.id.rpmTextView);
+        favSwitch = findViewById(R.id.favSwitch);
         batteryOptimizationContainer = findViewById(R.id.batteryOptimizationContainer);
-        eventDescriptionView = (TextView) findViewById(R.id.eventDescriptionTextView);
-        registerAdvancedButton = (Button) findViewById(R.id.registerAdvancedButton);
-        unRegisterAdvancedButton = (Button) findViewById(R.id.unRegisterAdvancedButton);
-        favSwitch = (Switch) findViewById(R.id.favSwitch);
-        favSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
+        eventDescriptionView = findViewById(R.id.eventDescriptionTextView);
+        registerAdvancedButton = findViewById(R.id.registerAdvancedButton);
+        unRegisterAdvancedButton = findViewById(R.id.unRegisterAdvancedButton);
+        favSwitch = findViewById(R.id.favSwitch);
+        favSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
 
-                    // setting the device as favorite. Setting a device as favorite, enables auto connect
-                    dataLoggerInterface.setFavoriteDevice(dataLogger.getName(), dataLogger.getAddress());
-                    favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
-                } else {
+                // setting the device as favorite. Setting a device as favorite, enables auto connect
+                dataLoggerInterface.setFavoriteDevice(dataLogger.getName(), dataLogger.getAddress());
+                favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
+            } else {
 
-                    // removing the device as favorite - disabling auto connect
-                    dataLoggerInterface.forgetDevice();
-                    favSwitch.setText("Auto connect not enabled for the connected device");
-                }
+                // removing the device as favorite - disabling auto connect
+                dataLoggerInterface.forgetDevice();
+                favSwitch.setText("Auto connect not enabled for the connected device");
             }
         });
         // checking if the current device is a favorite device
@@ -133,44 +130,38 @@ public class ConnectedActivity extends AppCompatActivity {
         // same pid should not be registered multiple times to avoid overwhelming datalogger
 
         // pressing this multiple times might cause app to behave unexpectedly
-        registerAdvancedButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(v.getContext(), "Registering PIDs For Continuous Updates", Toast.LENGTH_LONG).show();
+        registerAdvancedButton.setOnClickListener(v -> {
+            Toast.makeText(v.getContext(), "Registering PIDs For Continuous Updates", Toast.LENGTH_LONG).show();
 
-                // registering PIDs with their IDs
-                boolean registerSpeed = false;
-                boolean registerRPM = false;
-                try {
-                    registerSpeed = dataLoggerInterface.registerDataPid(DPID_SPEED_ID, dpidListSpeed);
-                    registerRPM = dataLoggerInterface.registerDataPid(DPID_RPM_ID, dpidListRPM);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            // registering PIDs with their IDs
+            boolean registerSpeed = false;
+            boolean registerRPM = false;
+            try {
+                registerSpeed = dataLoggerInterface.registerDataPid(DPID_SPEED_ID, dpidListSpeed);
+                registerRPM = dataLoggerInterface.registerDataPid(DPID_RPM_ID, dpidListRPM);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-                if (registerSpeed && registerRPM) {
-                    Log.d(TAG, " speed and rpm registered successfully");
-                } else {
-                    Log.d(TAG, " speed and rpm registration failed");
-                }
+            if (registerSpeed && registerRPM) {
+                Log.d(TAG, " speed and rpm registered successfully");
+            } else {
+                Log.d(TAG, " speed and rpm registration failed");
             }
         });
 
-        unRegisterAdvancedButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(v.getContext(), "UnRegistering PIDs", Toast.LENGTH_LONG).show();
+        unRegisterAdvancedButton.setOnClickListener(v -> {
+            Toast.makeText(v.getContext(), "UnRegistering PIDs", Toast.LENGTH_LONG).show();
 
-                // unregistering PIDs with their IDs
-                try {
-                    dataLoggerInterface.unregisterDataPid(DPID_SPEED_ID);
-                    dataLoggerInterface.unregisterDataPid(DPID_RPM_ID);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                rpmTextView.setText("RPM: --");
-                speedTextView.setText("Speed: --");
+            // unregistering PIDs with their IDs
+            try {
+                dataLoggerInterface.unregisterDataPid(DPID_SPEED_ID);
+                dataLoggerInterface.unregisterDataPid(DPID_RPM_ID);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+            rpmTextView.setText("RPM: --");
+            speedTextView.setText("Speed: --");
         });
 
     }
@@ -219,12 +210,12 @@ public class ConnectedActivity extends AppCompatActivity {
             switch (event.DPid) {
                 case DPID_SPEED_ID:
                     VehicleSpeed speed = (VehicleSpeed) event.PID_Data.get(PID_VEHICLE_SPEED);
-                    String speedText = "Speed: " + String.valueOf(speed.value) + speed.unit;
+                    String speedText = "Speed: " + speed.value + speed.unit;
                     speedTextView.setText(speedText);
                     break;
                 case DPID_RPM_ID:
                     EngineRPM engineRPM = (EngineRPM) event.PID_Data.get(PID_ENGINE_RPM);
-                    String rpmText = "RPM: " + String.valueOf(engineRPM.value) + engineRPM.unit;
+                    String rpmText = "RPM: " + engineRPM.value + engineRPM.unit;
                     rpmTextView.setText(rpmText);
                     break;
                 default:
@@ -242,11 +233,11 @@ public class ConnectedActivity extends AppCompatActivity {
         switch (event.EPid) {
             case DataLoggerInterface.PID_EVENT_HARD_BRAKING:
                 Integer breakValue = ((HardBrakingData) event.data).maxBraking;
-                eventDescription = "Hard Break: " + String.valueOf(breakValue);
+                eventDescription = "Hard Break: " + breakValue;
                 break;
             case DataLoggerInterface.PID_EVENT_HARD_ACCEL:
                 Integer accelValue = ((HardAccelerationData) event.data).maxAcceleration;
-                eventDescription = "Hard Accel: " + String.valueOf(accelValue);
+                eventDescription = "Hard Accel: " + accelValue;
                 break;
             default:
                 break;
@@ -260,18 +251,10 @@ public class ConnectedActivity extends AppCompatActivity {
         if (connected) {
             new AlertDialog.Builder(ConnectedActivity.this)
                     .setTitle("Do you want to disconnect from DataLogger?")
-                    .setPositiveButton("Disconnect", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dataLoggerInterface.disconnect();
-                            finish();
-                        }
-                    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            }).setCancelable(true)
+                    .setPositiveButton("Disconnect", (dialog, which) -> {
+                        dataLoggerInterface.disconnect();
+                        finish();
+                    }).setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss()).setCancelable(true)
                     .show();
         } else {
             super.onBackPressed();
@@ -320,7 +303,7 @@ public class ConnectedActivity extends AppCompatActivity {
         // un-registering events
         boolean unregisterEventPid = dataLoggerInterface.unregisterEventPid(eventPids);
         eventDescriptionView.setText("--");
-        Toast.makeText(this, "Event pid unregister result: " + String.valueOf(unregisterEventPid), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Event pid unregister result: " + unregisterEventPid, Toast.LENGTH_SHORT).show();
     }
 
     // click handlers for more info
@@ -330,48 +313,28 @@ public class ConnectedActivity extends AppCompatActivity {
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.basic_header)
                         .setMessage(R.string.basic_info)
-                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setCancelable(true)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;
             case R.id.advancedChannelDataPidInfo:
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.advanced_header_data)
                         .setMessage(R.string.advanced_info_data)
-                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setCancelable(true)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;
             case R.id.advancedChannelEventPidInfo:
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.advanced_header_events)
                         .setMessage(R.string.advanced_info_events)
-                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setCancelable(true)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;
             case R.id.autoConnectInfo:
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.autoconnect_header)
                         .setMessage(R.string.autoconnect_info)
-                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setCancelable(true)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;
             default:
