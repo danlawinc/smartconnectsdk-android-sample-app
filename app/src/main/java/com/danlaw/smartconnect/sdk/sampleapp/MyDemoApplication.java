@@ -6,8 +6,11 @@ import androidx.multidex.MultiDexApplication;
 import androidx.core.app.TaskStackBuilder;
 
 import com.danlaw.smartconnect.sdk.sampleapp.events.AuthEvent;
+import com.danlaw.smartconnect.sdk.sampleapp.events.BleapUDPDataEvent;
 import com.danlaw.smartconnectsdk.auth.AuthInterface;
 import com.danlaw.smartconnectsdk.auth.IAuthCallback;
+import com.danlaw.smartconnectsdk.bleap.BleapInterface;
+import com.danlaw.smartconnectsdk.bleap.IBleapCallback;
 import com.danlaw.smartconnectsdk.bluetooth.BluetoothInterface;
 import com.danlaw.smartconnectsdk.bluetooth.IBluetoothCallback;
 import com.danlaw.smartconnectsdk.datalogger.AutoConnectApp;
@@ -30,12 +33,13 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * If an app wants to implement autoconnect, it must create
  * an application class that extends from android's application class and implement autoconnect
  */
-public class MyDemoApplication extends MultiDexApplication implements AutoConnectApp, IAuthCallback {
+public class MyDemoApplication extends MultiDexApplication implements AutoConnectApp, IAuthCallback, IBleapCallback {
 
     /**
      * THIS KEY NEEDS TO BE CORRECT!
@@ -173,6 +177,10 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
         return DataLoggerInterface.getInstance(this, getBluetoothInterface(), iDataLoggerCallback);
     }
 
+    public BleapInterface getBleapInterface() throws SdkNotAuthenticatedException {
+        return BleapInterface.getInstance(this, this);
+    }
+
     @Override
     public String getNotificationTitle() {
         return "Connected to DataLogger";
@@ -218,4 +226,28 @@ public class MyDemoApplication extends MultiDexApplication implements AutoConnec
         event.message = s;
         EventBus.getDefault().post(event);
     }
+
+    @Override
+    public void onBleapFotaResponse(boolean b, String[] strings) {
+//        add info
+    }
+
+    @Override
+    public void onBleapUDPData(byte[] data, byte acknowledgementByte) {
+//add info
+    }
+
+    @Override
+    public void onBleapFormattedUDPData(ArrayList<HashMap<Integer, Object>> arrayList, byte acknowledgementByte) {
+        for (int i = 0; i < arrayList.size(); i++) {
+            BleapUDPDataEvent event = new BleapUDPDataEvent();
+            event.EPid = (int) Objects.requireNonNull(arrayList.get(i).keySet().toArray())[0];
+            event.data = arrayList.get(i).get(event.EPid);
+            EventBus.getDefault().post(event);
+        }
+        try {
+            getBleapInterface().sendBleapAcknowledgement(acknowledgementByte);
+        } catch (SdkNotAuthenticatedException e) {
+            e.printStackTrace();
+        }    }
 }

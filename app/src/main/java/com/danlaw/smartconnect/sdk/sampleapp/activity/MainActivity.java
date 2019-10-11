@@ -121,6 +121,9 @@ public class MainActivity extends AppCompatActivity {
 
             // getting the singleton bluetooth interface to communicate with mobile's bluetooth ( detect if on/ turn on)
             bluetoothInterface = ((MyDemoApplication) getApplication()).getBluetoothInterface();
+
+            // turning off the auto acknowledgement for UDP message for  bleap devices
+            ((MyDemoApplication) getApplication()).getBleapInterface().setBleapAutoAcknowledgement(false);
         } catch (BleNotSupportedException e) {
             Log.d(TAG, "bluetooth not supported");
             e.printStackTrace();
