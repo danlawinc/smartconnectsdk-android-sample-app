@@ -67,11 +67,6 @@ DataLoggerInterface interface = DataLoggerInterface.getInstance(this, getBluetoo
 ```interface.connect(address);```
 
 
-# Component Library
-- AuthInterface: This class AuthInterface provides the entry point for the SDK. The hosting application should call the interface method validateToken to get the SDK authenticated. If the SDK is not authenticated, then none of the services that are offered by the SDK will be available.
-- DataLoggerInterface: This class handles communication between the app and the SDK. It provides the outward facing methods for interacting with the Danlaw Android SDK.
-- IDataLoggerCallback: This class defines the callback methods that needs to be implemented by the hosting application to receive updates delivered by `DataLoggerInterface`.
-
 # FAQ
 - **Could not find :smart-connect-sdk**  
     
