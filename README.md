@@ -1,27 +1,70 @@
 # smartconnectsdk-android-sample-app
-This sample app is quick guide on how to start using SmartConnectSDK in your app.
+This sample app acts as a template to kickstart your android app development. 
 
-# Feature
+To build the project, just **copy the SDK (.aar file) to libs folder** of your project and **replace API_KEY with your key** that was issued to you by Danlaw in ```MyDemoApplication.java``` file.
+
+# Features
 - [x] Scan Devices
-- [x] Bluetooth Enable/Disable
-- [x] Autoconnect Devices
-- [x] Connect/Disconnect Devices
+- [x] Enable Bluetooth
+- [x] Connect/Disconnect to Devices
 - [x] Set Favorite/Forget Devices
+- [x] Autoconnect to Favorite Device
 - [x] Firmware Update
-- [x] Register/Unregister Pids
-- [x] Create/Remove Notifications
-- [x] Configure/Remove wi-fi
-
-
+- [x] Request data pids 
+- [x] Register/unregister data pids for continuous updates
+- [x] Register/unregister for event updates
 
 # Requirements
 - Minimum Android API level 19
 - Android Studio
 
+# Step 1: Installation
+1. Copy the SDK (.aar file) to libs folder of your project. 
+2. Add the following to **top level build.gradle file under repositories**.
+```
+repositories {
+    // your other repos here
+    flatDir {
+        dirs 'libs'
+    }
+}
+```
+3. Add these necessary dependencies to your **app's build.gradle file** and sync your project.
+```
+implementation fileTree(include: ['*.jar'], dir: 'libs')
+api '(name: 'smart-connect-sdk-release', ext: 'aar')'
+implementation 'org.apache.commons:commons-lang3:3.8.1'
+implementation 'commons-net:commons-net:3.6'
+implementation 'org.greenrobot:eventbus:3.1.1'
+implementation 'com.android.volley:volley:1.1.0'
+implementation 'com.google.android.gms:play-services-location:17.0.0'
+implementation 'com.google.guava:guava:25.1-android'
+implementation 'org.slf4j:slf4j-api:1.7.25'
+```
 
-# Installation
-- Copy the SDK (.aar file) to libs folder of your project. 
-- Replace ApiKey issued by Danlaw in 'MyDemoApplication.java' file.
+# Step 2: Authenticating
+After installing the SDK, **you MUST authenticate it before you can use all the interfaces**. 
+To authenticate the SDK you will your android app's ```context```, ```API_KEY``` issued by Danlaw and an implementaion of ```IAuthCallback```. 
+
+```
+AuthInterface.validateToken(context, API_KEY, iAuthCallback);
+```
+Once you get response code 200 in the callback, you are ready to use the 
+
+# Step 3: Connecting
+1. Get an instance:
+
+```
+DataLoggerInterface interface = DataLoggerInterface.getInstance(this, getBluetoothInterface(), iDataLoggerCallback);
+``` 
+
+2. Scan for devices, scan results are delivered by the ```onOBDDeviceFound``` callback:
+
+```interface.scanForDataLoggers(true);```
+
+3. Connect to device using the address returned in the above step:
+
+```interface.connect(address);```
 
 
 # Component Library
