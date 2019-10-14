@@ -3,6 +3,22 @@ This sample app acts as a template to kickstart your android app development.
 
 To build the project, just **copy the SDK (.aar file) to libs folder** of your project and **replace API_KEY with your key** that was issued to you by Danlaw in ```MyDemoApplication.java``` file.
 
+# Table of Contents  
+
+1. [Features](#features)
+2. [Requirements](#requirements)
+3. [Installation](#installation)
+4. [Authentication](#authentication)
+5. [Connecting to Datalogger](#connecting-to-datalogger)
+6. [Auto-Connect](#auto-connect)
+7. [Basic PIDs](#basic-pids)
+8. [Advanced PIDs](#advanced-pids)
+9. [Data PIDs](#data-pids)
+10. [UDP Events](#udp-events)
+11. [FAQ](#faq)
+12. [Credits](#credits)
+
+
 # Features
 - [x] Scan Devices
 - [x] Enable Bluetooth
@@ -18,7 +34,7 @@ To build the project, just **copy the SDK (.aar file) to libs folder** of your p
 - Minimum Android API level 19
 - Android Studio
 
-# Step 1: Installation
+# Installation
 1. Copy the SDK (.aar file) to libs folder of your project. 
 2. Add the following to **top level build.gradle file under repositories**.
 ```
@@ -42,16 +58,16 @@ implementation 'com.google.guava:guava:25.1-android'
 implementation 'org.slf4j:slf4j-api:1.7.25'
 ```
 
-# Step 2: Authenticating
+# Authentication
 After installing the SDK, **you MUST authenticate it before you can use all the interfaces**. 
 To authenticate the SDK you will your android app's ```context```, ```API_KEY``` issued by Danlaw and an implementaion of ```IAuthCallback```. 
 
 ```
 AuthInterface.validateToken(context, API_KEY, iAuthCallback);
 ```
-Once you get response code 200 in the callback, you are ready to use the 
+Once you get response code 200 in the callback, your app will be ready to access all the features of the SDK
 
-# Step 3: Connecting
+# Connecting to Datalogger
 1. Get an instance:
 
 ```
@@ -66,7 +82,10 @@ DataLoggerInterface interface = DataLoggerInterface.getInstance(this, getBluetoo
 
 ```interface.connect(address);```
 
-# Step 4: Requesting and reading data
+# Auto-Connect
+// add this
+
+# Basic PIDs
 Requesting and reading PID data from basic channel
 ```
 //requesting
@@ -91,7 +110,7 @@ public void onBasicDataReceived (int responseCode, int pid, Object data) {
     }
 ```
 
-Requesting and reading PID data from advanced channel
+# Advanced PIDs
 ```
 //requesting
 int requestID = 1;
@@ -122,8 +141,11 @@ public void onDataPidDataReceived(int responseCode, int DPid,HashMap<Integer, Ob
     }
 }
 ```
+# Data PIDs
+// add this
+# UDP Events
+// add this
 
-Requesting Event Data From advaed  +read
 
 # FAQ
 - **Could not find :smart-connect-sdk**  
