@@ -83,7 +83,25 @@ DataLoggerInterface interface = DataLoggerInterface.getInstance(this, getBluetoo
 ```interface.connect(address);```
 
 # Auto-Connect
-// add this
+Smart Connect SDK offers an Auto Connect feature which will make the app connect to the DataLogger automatically.
+For this to work, a device must be set as favorite, the connection is triggered automatically everytime the device is discovered during scan.
+Auto connect also works in background, when the SDK detects when the mobile device is in the vehicle (Using Android's Activity Recognition) and tries to connect silently in the background.
+
+To enable this feature, follow these steps:
+1. Set a device as favorite
+```
+interface.setFavoriteDevice(deviceName, deviceAddress);
+```
+
+2. Create a class that extends from the Application class and implement the ```AutoConnectApp``` callback. Refer to https://developer.android.com/reference/android/app/Application.html for more details.
+
+
+3. Disable battery optimization for your app in the system settings. (Needed for Android 6.0 and above). Refer to https://developer.android.com/training/monitoring-device-state/doze-standby.html#support_for_other_use_cases for more details.
+
+To disable auto connect:
+```
+interface.forgetDevice();
+```
 
 # Get PID data
 The request can be made as often as needed, and the data will be returned once for every request.
@@ -240,7 +258,11 @@ Follow these steps in order to receive the UDP Events on your mobile device:
     
 - **Auto connect doesn't work**
     
-    Please make sure battery optimization is disabled in the system settings for the app.
+    Please make sure that:
+    * application is registered under ```android:name=""``` for the ```application``` tag in ```AndroidManifest.xml```
+    * battery optimization is disabled in the system settings for the app
+    * Try to authenticate the sdk in the ```onCreate()``` method of the class that extends from ```Application``` to make sure token is
+    valid before the app tries to connect in the backgroud.
     
 - **Continuous Updates/realtime events request failed**
 
