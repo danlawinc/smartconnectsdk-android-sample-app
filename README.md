@@ -156,7 +156,11 @@ public void onDataPidDataReceived(int responseCode, int DPid,HashMap<Integer, Ob
     }
 }
 ```
-// add unregistering of updates
+
+To unregister, pass the requestID:
+```
+boolean unregisterResult = interface.unregisterDataPid(requestID);
+```
 
 # Realtime Events
 Registering for events allows to receive data in real-time when an event such as hard break, hard acceleration, cornering etc., is detected by the datalogger while the vehicle is being driven. 
@@ -177,7 +181,14 @@ eventPids.add(DataLoggerInterface.PID_EVENT_HARD_BRAKING);
 eventPids.add(DataLoggerInterface.PID_EVENT_HARD_ACCEL);
 boolean registerationSuccessful = interface.registerEventPid(eventPids);
 ```
-// add unregister
+
+To unregister pass the IDs as a part of arraylist:
+```
+ArrayList<Integer> eventPids = new ArrayList<>();
+eventPids.add(DataLoggerInterface.PID_VEHICLE_SPEED);
+boolean unregisterationResult = interface.unregisterEventPid(eventPids);
+```
+
 
 # UDP Events
 Every realtime event that is detected by the datalogger is delivered as an UDP Event by the datalogger, regardless of the datalogger was connected to a mobile when the event occurred or not.
@@ -193,7 +204,34 @@ Data that can be received:
 By default, the UDP events are delivered to Danlaw Servers, but for dataloggers with the **BLEAP** configuration, the events are delivered to mobile device instead.
 
 Follow these steps in order to receive the UDP Events on your mobile device:
-// add steps
+1. Get an instance of the BLEAP interface
+ ```
+ BleapInterface bleapInterface = BleapInterface.getInstance(context, ibleapCallback);
+ ```
+ 2. **(Optional)** Turn auto acknowledgement off (on by default).
+ ```
+ bleapInterface.setBleapAutoAcknowledgement(false);
+ ```
+ 
+ 3. Parse incoming data
+ ```
+ @Override
+ public void onBleapFormattedUDPData(ArrayList<HashMap<Integer, Object>> arrayList, byte ack){
+ //process the data
+    for (int i = 0; i < arrayList.size(); i++) {
+        int id = (int) Objects.requireNonNull(arrayList.get(i).keySet().toArray())[0];
+        Object data = arrayList.get(i).get(id);
+         switch (id) {
+            case PID_EVENT_HARD_BRAKING:
+                HardBrakingData hardBrakingData = (HardBrakingData) data;
+                Log.v(TAG, "Hard Break Value: " + String.valueOf(hardBrakingData.maxBraking));
+                break;
+             // handle other cases
+        }
+    }
+    // bleapInterface.sendBleapAcknowledgement(ackByte); // only needed if acknowledgement is turned off in step 2.
+ }
+ ```
 
 # FAQ
 - **Could not find :smart-connect-sdk**  
@@ -204,9 +242,24 @@ Follow these steps in order to receive the UDP Events on your mobile device:
     
     Please make sure battery optimization is disabled in the system settings for the app.
     
-- **What is the difference between basic and advanced channel?**
-- **Advanced PID request failed**
+- **Continuous Updates/realtime events request failed**
 
+    Although you can register upto 5 PIDs per request, if any of the PIDs is not supported by the vehicle or if data is not available,
+    the entire request fails.
+    
+    Try registering the PIDs individually to see which request fails.
+    ```
+    int id1 = 1;
+    ArrayList<Integer> list1 = new ArrayList<>();
+    list1.add(DataLoggerInterface.PID_VEHICLE_SPEED);
+    
+    int id2 = 2
+    ArrayList<Integer> list2 = new ArrayList<>();
+    list2.add(DataLoggerInterface.PID_ENGINE_RPM);
+    
+    interface.registerDataPid(id1,list1);
+    interface.registerDataPid(id2,list2);
+    ```
 
 # Credits
 SmartConnect sample app and SmartConnectSDK is owned by Danlaw Inc. A valid license is required to use Danlaw’s Smart Connect products. Licenses are issued by Danlaw on an annual basis for a rolling twelve-month effective time period. License fees established by Danlaw are comprised of a baseline minimum fee, plus a per device fee for each active device at the time of the annual Smart Connect license renewal. Please contact mobile@danlawinc.com for the Key and Licensing information.
