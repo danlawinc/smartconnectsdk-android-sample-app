@@ -66,6 +66,64 @@ DataLoggerInterface interface = DataLoggerInterface.getInstance(this, getBluetoo
 
 ```interface.connect(address);```
 
+# Step 4: Requesting and reading data
+Requesting and reading PID data from basic channel
+```
+//requesting
+interface.readBasicPidData(DataLoggerInterface.PID_FUEL_LEVEL);
+
+//reading 
+@Override
+public void onBasicDataReceived (int responseCode, int pid, Object data) {
+    if (responseCode == IDataLoggerCallback.RESPONSE_SUCCESS) {
+        switch (pid) {
+            case DataLoggerInterface.PID_FUEL_LEVEL:
+                FuelLevel fuelLevel = (FuelLevel) data; // casting the object to type FuelLevel
+                Log.v(TAG,"FUEL: " + String.valueOf(fuelLevel.currentFuelLevel));
+                break;
+
+            //Add your case for other pids
+            default:
+                Log.v(TAG, " basic data received");
+                break;
+            }
+        }
+    }
+```
+
+Requesting and reading PID data from advanced channel
+```
+//requesting
+int requestID = 1;
+                    
+ArrayList<Integer> list = new ArrayList<>();
+list.add(DataLoggerInterface.PID_VEHICLE_SPEED);
+list.add(DataLoggerInterface.PID_ENGINE_RPM);
+                    
+interface.registerDataPid(requestID,list);
+
+//reading
+@Override
+public void onDataPidDataReceived(int responseCode, int DPid,HashMap<Integer, Object> PID_Data) {
+    if (responseCode == RESPONSE_SUCCESS) {
+        switch (DPid) {
+            case requestID: // int value used to register dpid
+                VehicleSpeed speed = (VehicleSpeed) PID_Data.get(DataLoggerInterface.PID_VEHICLE_SPEED);
+                EngineRPM engineRPM = (EngineRPM) PID_Data.get(DataLoggerInterface.PID_ENGINE_RPM);
+                Log.v(TAG,"Speed: " + String.valueOf(speed.value));
+                Log.v(TAG,"RPM: " + String.valueOf(engineRPM.value));
+                break;
+            default:
+                Log.v(TAG,"data received");
+                break;
+        }
+    } else {
+        Log.v(TAG, " check response code");
+    }
+}
+```
+
+Requesting Event Data From advaed  +read
 
 # FAQ
 - **Could not find :smart-connect-sdk**  
@@ -75,6 +133,9 @@ DataLoggerInterface interface = DataLoggerInterface.getInstance(this, getBluetoo
 - **Auto connect doesn't work**
     
     Please make sure battery optimization is disabled in the system settings for the app.
+    
+- **What is the difference between basic and advanced channel?**
+- **Advanced PID request failed**
 
 
 # Credits
