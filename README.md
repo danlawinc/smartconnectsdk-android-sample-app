@@ -85,8 +85,9 @@ DataLoggerInterface interface = DataLoggerInterface.getInstance(this, getBluetoo
 # Auto-Connect
 // add this
 
-# Basic PIDs
-Requesting and reading PID data from basic channel
+# Request PID Data Once
+The request can be made as often as needed, and the data will be returned once per request.
+Here's an example to request fuel level data:
 ```
 //requesting
 interface.readBasicPidData(DataLoggerInterface.PID_FUEL_LEVEL);
@@ -110,7 +111,8 @@ public void onBasicDataReceived (int responseCode, int pid, Object data) {
     }
 ```
 
-# Advanced PIDs
+# Register PID Data for Continuous Updates
+
 ```
 //requesting
 int requestID = 1;
@@ -141,7 +143,7 @@ public void onDataPidDataReceived(int responseCode, int DPid,HashMap<Integer, Ob
     }
 }
 ```
-# Data PIDs
+# Realtime Events
 // add this
 # UDP Events
 // add this
