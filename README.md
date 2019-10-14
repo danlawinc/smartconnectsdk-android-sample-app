@@ -11,9 +11,9 @@ To build the project, just **copy the SDK (.aar file) to libs folder** of your p
 4. [Authentication](#authentication)
 5. [Connecting to Datalogger](#connecting-to-datalogger)
 6. [Auto-Connect](#auto-connect)
-7. [Basic PIDs](#basic-pids)
-8. [Advanced PIDs](#advanced-pids)
-9. [Data PIDs](#data-pids)
+7. [Get PID data](#get-pid-data)
+8. [Register PID Data for Continuous Updates](#register-pid-data-for-continuous-updates)
+9. [Realtime Events](#realtime-events)
 10. [UDP Events](#udp-events)
 11. [FAQ](#faq)
 12. [Credits](#credits)
@@ -85,8 +85,14 @@ DataLoggerInterface interface = DataLoggerInterface.getInstance(this, getBluetoo
 # Auto-Connect
 // add this
 
-# Request PID Data Once
-The request can be made as often as needed, and the data will be returned once per request.
+# Get PID data
+The request can be made as often as needed, and the data will be returned once for every request.
+
+Data that can be requested:
+ - Standard PIDs (id: 0-255)
+ - Danlaw's Custom PIDs (id: 256 and over)
+ - Please refer the documentation for a complete list of the request IDs and their corresponding return object types.
+
 Here's an example to request fuel level data:
 ```
 //requesting
@@ -112,7 +118,14 @@ public void onBasicDataReceived (int responseCode, int pid, Object data) {
 ```
 
 # Register PID Data for Continuous Updates
+Registering for PID allows to receive data continuously until the request is unregistered. 
 
+A max of 5 PIDs can be registered in a single request.
+Data that can be requested:
+ - Only Standard PIDs (id: 0-255) are supported for continuous updates.
+ - Please refer the documentation for a complete list of the request IDs and their corresponding return object types. 
+
+An example to get continuous updates for the PIDs speed and engine rpm 
 ```
 //requesting
 int requestID = 1;
@@ -143,11 +156,44 @@ public void onDataPidDataReceived(int responseCode, int DPid,HashMap<Integer, Ob
     }
 }
 ```
-# Realtime Events
-// add this
-# UDP Events
-// add this
+// add unregistering of updates
 
+# Realtime Events
+Registering for events allows to receive data in real-time when an event such as hard break, hard acceleration, cornering etc., is detected by the datalogger while the vehicle is being driven. 
+
+Realtime events can only be received if the mobile is connected to the Datalogger when the event occurred. 
+If the datalogger is not connected to a mobile device, event is delivered as a part of UDP Event the next time a connection is established.
+
+Data that can be requested:
+ - Custom events pre defined by Danlaw's communication protocol. 
+ - Please refer the documentation for a complete list of the request IDs and their corresponding return object types. 
+
+A max of 5 event PIDs can be registered in a single request.
+
+Here's an example to register hard break and hard acceleration events:
+```
+ArrayList<Integer> eventPids = new ArrayList<>();
+eventPids.add(DataLoggerInterface.PID_EVENT_HARD_BRAKING);
+eventPids.add(DataLoggerInterface.PID_EVENT_HARD_ACCEL);
+boolean registerationSuccessful = interface.registerEventPid(eventPids);
+```
+// add unregister
+
+# UDP Events
+Every realtime event that is detected by the datalogger is delivered as an UDP Event by the datalogger, regardless of the datalogger was connected to a mobile when the event occurred or not.
+
+No registeration is required in order to get these events.
+
+The events are erased from the datalogger's memory once it receives a confirmation that the event was received by the client.
+
+Data that can be received:
+ - Custom events pre defined by Danlaw's communication protocol. 
+ - Please refer the documentation for a complete list of the request IDs and their corresponding return object types. 
+
+By default, the UDP events are delivered to Danlaw Servers, but for dataloggers with the **BLEAP** configuration, the events are delivered to mobile device instead.
+
+Follow these steps in order to receive the UDP Events on your mobile device:
+// add steps
 
 # FAQ
 - **Could not find :smart-connect-sdk**  
