@@ -11,9 +11,9 @@ To build the project, just **copy the SDK (.aar file) to libs folder** of your p
 4. [Authentication](#authentication)
 5. [Connecting to Datalogger](#connecting-to-datalogger)
 6. [Auto-Connect](#auto-connect)
-7. [Get PID data](#get-pid-data)
-8. [Register PID Data for Continuous Updates](#register-pid-data-for-continuous-updates)
-9. [Realtime Events](#realtime-events)
+7. [Get PID data (Basic Channel](#get-pid-data-basic-channel)
+8. [Register PID Data for Continuous Updates (Advanced Channel)](#register-pid-data-for-continuous-updates-advanced-channel)
+9. [Realtime Events (Advanced Channel)](#realtime-events-advanced-channel)
 10. [UDP Events](#udp-events)
 11. [FAQ](#faq)
 12. [Credits](#credits)
@@ -60,12 +60,24 @@ implementation 'org.slf4j:slf4j-api:1.7.25'
 
 # Authentication
 After installing the SDK, **you MUST authenticate it before you can use all the interfaces**. 
-To authenticate the SDK you will your android app's ```context```, ```API_KEY``` issued by Danlaw and an implementaion of ```IAuthCallback```. 
-
+To authenticate the SDK:
+1. Pass your android app's ```context```, ```API_KEY``` issued by Danlaw and an implementaion of ```IAuthCallback```.
 ```
 AuthInterface.validateToken(context, API_KEY, iAuthCallback);
 ```
-Once you get response code 200 in the callback, your app will be ready to access all the features of the SDK
+
+2. Make sure you get response code 200 in the callback before you try to use the features of the SDK
+```
+@Override
+    public void onAuthenticationResult(int code, String message) {
+        if(code == 200){
+            Log.d(TAG, "Auth success, sdk is ready to be used");
+        } else {
+            Log.d(TAG, "Auth Results:" + code + " Message:" + message);
+        }
+    }
+
+```
 
 # Connecting to Datalogger
 1. Get an instance:
@@ -103,7 +115,7 @@ To disable auto connect:
 interface.forgetDevice();
 ```
 
-# Get PID data
+# Get PID data (Basic Channel)
 The request can be made as often as needed, and the data will be returned once for every request.
 
 Data that can be requested:
@@ -135,7 +147,7 @@ public void onBasicDataReceived (int responseCode, int pid, Object data) {
     }
 ```
 
-# Register PID Data for Continuous Updates
+# Register PID Data for Continuous Updates (Advanced Channel)
 Registering for PID allows to receive data continuously until the request is unregistered. 
 
 A max of 5 PIDs can be registered in a single request.
@@ -180,7 +192,7 @@ To unregister, pass the requestID:
 boolean unregisterResult = interface.unregisterDataPid(requestID);
 ```
 
-# Realtime Events
+# Realtime Events (Advanced Channel)
 Registering for events allows to receive data in real-time when an event such as hard break, hard acceleration, cornering etc., is detected by the datalogger while the vehicle is being driven. 
 
 Realtime events can only be received if the mobile is connected to the Datalogger when the event occurred. 
@@ -203,7 +215,7 @@ boolean registerationSuccessful = interface.registerEventPid(eventPids);
 To unregister pass the IDs as a part of arraylist:
 ```
 ArrayList<Integer> eventPids = new ArrayList<>();
-eventPids.add(DataLoggerInterface.PID_VEHICLE_SPEED);
+eventPids.add(DataLoggerInterface.PID_EVENT_HARD_BRAKING);
 boolean unregisterationResult = interface.unregisterEventPid(eventPids);
 ```
 
@@ -261,8 +273,8 @@ Follow these steps in order to receive the UDP Events on your mobile device:
     Please make sure that:
     * application is registered under ```android:name=""``` for the ```application``` tag in ```AndroidManifest.xml```
     * battery optimization is disabled in the system settings for the app
-    * Try to authenticate the sdk in the ```onCreate()``` method of the class that extends from ```Application``` to make sure token is
-    valid before the app tries to connect in the backgroud.
+    * Try to authenticate the sdk in the ```onCreate()``` method of the class that extends from ```Application``` to make sure token
+    is valid before the app tries to connect in the backgroud.
     
 - **Continuous Updates/realtime events request failed**
 
@@ -293,8 +305,14 @@ Follow these steps in order to receive the UDP Events on your mobile device:
     
     ```
     
-    **NOTE:** Only Standard PIDs(id: 0-255) are supported for continuous updates. Danlaw's Custom PIDs (id: 256 and over) must be requested
-    everytime a new value is needed.
+    **NOTE:** Only Standard PIDs(id: 0-255) are supported for continuous updates. Danlaw's Custom PIDs (id: 256 and over) must be
+    requested everytime a new value is needed.
+  
+ - **Same UDP Event is getting received again and again**
+ 
+    Try turning ```setBleapAutoAcknowledgement``` off and call ```sendBleapAcknowledgement``` for every UDP event message you get.
+  
+    
 
 # Credits
 SmartConnect sample app and SmartConnectSDK is owned by Danlaw Inc. A valid license is required to use Danlaw’s Smart Connect products. Licenses are issued by Danlaw on an annual basis for a rolling twelve-month effective time period. License fees established by Danlaw are comprised of a baseline minimum fee, plus a per device fee for each active device at the time of the annual Smart Connect license renewal. Please contact mobile@danlawinc.com for the Key and Licensing information.
