@@ -115,6 +115,8 @@ To disable auto connect:
 interface.forgetDevice();
 ```
 
+Check out https://github.com/danlawinc/smartconnectsdk-android-sample-app/blob/master/app/src/main/java/com/danlaw/smartconnect/sdk/sampleapp/MyDemoApplication.java for example.
+
 # Get PID data (Basic Channel)
 The request can be made as often as needed, and the data will be returned once for every request.
 
