@@ -269,7 +269,9 @@ Follow these steps in order to receive the UDP Events on your mobile device:
     Although you can register upto 5 PIDs per request, if any of the PIDs is not supported by the vehicle or if data is not available,
     the entire request fails.
     
-    Try registering the PIDs individually to see which request fails.
+    Try registering the PIDs/events individually to see which request fails.
+    
+    For example, instead of registering speed and rpm together in a single request, break it into 2 requests.
     ```
     int id1 = 1;
     ArrayList<Integer> list1 = new ArrayList<>();
@@ -280,8 +282,19 @@ Follow these steps in order to receive the UDP Events on your mobile device:
     list2.add(DataLoggerInterface.PID_ENGINE_RPM);
     
     interface.registerDataPid(id1,list1);
-    interface.registerDataPid(id2,list2);
+    
+    // running the other request after 500ms to avoid getting data logger busy error
+    new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+               interface.registerDataPid(id2,list2);         
+            }
+        }, 500);
+    
     ```
+    
+    **NOTE:** Only Standard PIDs(id: 0-255) are supported for continuous updates. Danlaw's Custom PIDs (id: 256 and over) must be requested
+    everytime a new value is needed.
 
 # Credits
 SmartConnect sample app and SmartConnectSDK is owned by Danlaw Inc. A valid license is required to use Danlaw’s Smart Connect products. Licenses are issued by Danlaw on an annual basis for a rolling twelve-month effective time period. License fees established by Danlaw are comprised of a baseline minimum fee, plus a per device fee for each active device at the time of the annual Smart Connect license renewal. Please contact mobile@danlawinc.com for the Key and Licensing information.
