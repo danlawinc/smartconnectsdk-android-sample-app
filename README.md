@@ -236,9 +236,9 @@ Data that can be received:
 By default, the UDP events are delivered to Danlaw Servers, but for dataloggers with the **BLEAP** configuration, the events are delivered to mobile device instead.
 
 Follow these steps in order to receive the UDP Events on your mobile device:
-1. Get an instance of the BLEAP interface
+1. Check if the connected device is a BLEAP or not by accessing the static member ```isBleap``` of ```DataLoggerInterface``` class.
  ```
- BleapInterface bleapInterface = BleapInterface.getInstance(context, ibleapCallback);
+ boolean isBleap = DataLoggerInterface.isBleap;
  ```
  2. **(Optional)** Turn auto acknowledgement off (on by default).
  ```
