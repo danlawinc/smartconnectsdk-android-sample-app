@@ -14,7 +14,7 @@ To build the project, just **copy the SDK (.aar file) to libs folder** of your p
 7. [Get PID data (Basic Channel)](#get-pid-data-basic-channel)
 8. [Register PID Data for Continuous Updates (Advanced Channel)](#register-pid-data-for-continuous-updates-advanced-channel)
 9. [Realtime Events (Advanced Channel)](#realtime-events-advanced-channel)
-10. [UDP Events](#udp-events)
+10. [UDP Events (BLEAP)](#udp-events-bleap)
 11. [FAQ](#faq)
 12. [Credits](#credits)
 
@@ -222,7 +222,7 @@ boolean unregisterationResult = interface.unregisterEventPid(eventPids);
 ```
 
 
-# UDP Events
+# UDP Events (BLEAP)
 Every realtime event that is detected by the datalogger is delivered as an UDP Event by the datalogger, regardless of the datalogger was connected to a mobile when the event occurred or not.
 
 No registeration is required in order to get these events.
