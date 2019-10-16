@@ -273,10 +273,11 @@ Follow these steps in order to receive the UDP Events on your mobile device:
 - **Auto connect doesn't work**
     
     Please make sure that:
-    * application is registered under ```android:name=""``` for the ```application``` tag in ```AndroidManifest.xml```
-    * battery optimization is disabled in the system settings for the app
+    * Application is registered under ```android:name=""``` for the ```application``` tag in ```AndroidManifest.xml```
+    * Battery optimization is disabled in the system settings for the app
     * Try to authenticate the sdk in the ```onCreate()``` method of the class that extends from ```Application``` to make sure token
     is valid before the app tries to connect in the backgroud.
+    * Permission for physical activity ```android.permission.ACTIVITY_RECOGNITION``` is granted to the app (Android 10 and above)
     
 - **Continuous Updates/realtime events request failed**
 
