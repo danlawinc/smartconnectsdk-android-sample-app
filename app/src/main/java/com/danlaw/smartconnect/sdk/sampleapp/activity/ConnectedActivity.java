@@ -1,11 +1,11 @@
 package com.danlaw.smartconnect.sdk.sampleapp.activity;
 
-import android.app.Notification;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -14,17 +14,18 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.danlaw.smartconnect.sdk.sampleapp.events.BleapUDPDataEvent;
 import com.danlaw.smartconnectsdk.bluetooth.BluetoothInterface;
 import com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface;
 import com.danlaw.smartconnectsdk.datalogger.model.EngineRPM;
 import com.danlaw.smartconnectsdk.datalogger.model.FuelLevel;
 import com.danlaw.smartconnectsdk.datalogger.model.GPS;
+import com.danlaw.smartconnectsdk.datalogger.model.GPSEvent;
 import com.danlaw.smartconnectsdk.datalogger.model.HardAccelerationData;
 import com.danlaw.smartconnectsdk.datalogger.model.HardBrakingData;
 import com.danlaw.smartconnectsdk.datalogger.model.VehicleSpeed;
@@ -42,7 +43,12 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import static com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface.PID_ENGINE_RPM;
 import static com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface.PID_VEHICLE_SPEED;
@@ -59,15 +65,17 @@ public class ConnectedActivity extends AppCompatActivity {
     ArrayList<Integer> dpidListRPM;
     ArrayList<Integer> eventPids;
     TextView fuelTextView, latitudeTextView, longitudeTextView;
-    TextView speedTextView;
-    TextView rpmTextView;
-    TextView eventDescriptionView;
+    TextView speedTextView, rpmTextView, eventDescriptionView;
+    TextView dataloggerType, bleapValue;
     Button registerAdvancedButton;
     Button unRegisterAdvancedButton;
     Switch favSwitch;
     DataLogger dataLogger;
     final private String TAG = ConnectedActivity.class.getCanonicalName();
     LinearLayout batteryOptimizationContainer;
+    private static DateFormat dateFormatter;
+    private SimpleDateFormat simpleDateFormat;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +93,11 @@ public class ConnectedActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        dateFormatter = new SimpleDateFormat("MMddyyHHmmss"); // format in which datalogger returns date
+        dateFormatter.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
+        simpleDateFormat = new SimpleDateFormat("MM/dd/yy hh:mm:ss a", Locale.US);// formatting the parsed date for display
+
+
         String name = getIntent().getStringExtra("deviceName");
         String address = getIntent().getStringExtra("deviceAddress");
         dataLogger = new DataLogger(name, address);
@@ -97,6 +110,8 @@ public class ConnectedActivity extends AppCompatActivity {
         latitudeTextView = findViewById(R.id.latValue);
         longitudeTextView = findViewById(R.id.longValue);
         speedTextView = findViewById(R.id.speedTextView);
+        bleapValue = findViewById(R.id.bleapEventValue);
+        dataloggerType = findViewById(R.id.dataloggerType);
         rpmTextView = findViewById(R.id.rpmTextView);
         favSwitch = findViewById(R.id.favSwitch);
         batteryOptimizationContainer = findViewById(R.id.batteryOptimizationContainer);
@@ -163,7 +178,7 @@ public class ConnectedActivity extends AppCompatActivity {
             rpmTextView.setText("RPM: --");
             speedTextView.setText("Speed: --");
         });
-
+        dataloggerType.setText("Datalogger type bleap: " + DataLoggerInterface.isBleap);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -243,6 +258,22 @@ public class ConnectedActivity extends AppCompatActivity {
                 break;
         }
         eventDescriptionView.setText(eventDescription);
+    }
+
+    @SuppressLint("SetTextI18n")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onBleapUDPReceived(BleapUDPDataEvent event) throws ParseException {
+        switch (event.EPid) {
+            case DataLoggerInterface.PID_EVENT_GPS:
+                GPSEvent data = (GPSEvent) event.data;
+                bleapValue.setText("GPS event received" +
+                        "\nDate:            " + simpleDateFormat.format(dateFormatter.parse(data.udpMessageHeader.deviceTime)) +
+                        "\nLAT:             " + data.udpMessageHeader.latitude +
+                        "\nLONG:            " + data.udpMessageHeader.longitude +
+                        "\nSATELLITES:      " + data.satellitesInView
+                );
+                break;
+        }
     }
 
     @Override
@@ -327,6 +358,13 @@ public class ConnectedActivity extends AppCompatActivity {
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.advanced_header_events)
                         .setMessage(R.string.advanced_info_events)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
+                        .show();
+                break;
+            case R.id.udpChannelDataPidInfo:
+                new AlertDialog.Builder(ConnectedActivity.this)
+                        .setTitle(R.string.udp_header_events)
+                        .setMessage(R.string.udp_info_events)
                         .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;

@@ -76,8 +76,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_margin="5dp"
                     android:text="FUEL: --"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textSize="18sp" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -180,8 +179,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginBottom="5dp"
                 android:text="SPEED: --"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/rpmTextView"
@@ -191,8 +189,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginBottom="5dp"
                 android:text="RPM: --"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/eventString"
@@ -239,8 +236,7 @@
                 android:layout_alignTop="@id/unregisterEventButton"
                 android:layout_alignParentEnd="true"
                 android:text="--"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:textSize="18sp"/>
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
 
@@ -282,23 +278,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/udpString"
-                android:textSize="19sp"
                 android:layout_marginTop="10dp"
-                android:id="@+id/udpInfo"
-                android:text="Datalogger type: "/>
-
-
+                android:id="@+id/dataloggerType"
+                android:text="Is Datalogger Config BLEAP: "/>
 
             <TextView
-                android:id="@+id/udpValueTextView"
+                android:id="@+id/bleapEventValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
-                android:layout_below="@id/udpInfo"
+                android:layout_below="@id/dataloggerType"
                 android:text="--"
                 android:layout_centerHorizontal="true"
-                android:textSize="21sp"
-                android:textStyle="bold" />
+                android:textSize="18sp" />
 
 
         </RelativeLayout>
