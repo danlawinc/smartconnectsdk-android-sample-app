@@ -1,11 +1,11 @@
 package com.danlaw.smartconnect.sdk.sampleapp.activity;
 
-import android.app.Notification;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -14,17 +14,18 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.danlaw.smartconnect.sdk.sampleapp.events.BleapUDPDataEvent;
 import com.danlaw.smartconnectsdk.bluetooth.BluetoothInterface;
 import com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface;
 import com.danlaw.smartconnectsdk.datalogger.model.EngineRPM;
 import com.danlaw.smartconnectsdk.datalogger.model.FuelLevel;
 import com.danlaw.smartconnectsdk.datalogger.model.GPS;
+import com.danlaw.smartconnectsdk.datalogger.model.GPSEvent;
 import com.danlaw.smartconnectsdk.datalogger.model.HardAccelerationData;
 import com.danlaw.smartconnectsdk.datalogger.model.HardBrakingData;
 import com.danlaw.smartconnectsdk.datalogger.model.VehicleSpeed;
@@ -42,7 +43,12 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import static com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface.PID_ENGINE_RPM;
 import static com.danlaw.smartconnectsdk.datalogger.DataLoggerInterface.PID_VEHICLE_SPEED;
@@ -59,15 +65,17 @@ public class ConnectedActivity extends AppCompatActivity {
     ArrayList<Integer> dpidListRPM;
     ArrayList<Integer> eventPids;
     TextView fuelTextView, latitudeTextView, longitudeTextView;
-    TextView speedTextView;
-    TextView rpmTextView;
-    TextView eventDescriptionView;
+    TextView speedTextView, rpmTextView, eventDescriptionView;
+    TextView dataloggerType, bleapValue;
     Button registerAdvancedButton;
     Button unRegisterAdvancedButton;
     Switch favSwitch;
     DataLogger dataLogger;
     final private String TAG = ConnectedActivity.class.getCanonicalName();
     LinearLayout batteryOptimizationContainer;
+    private static DateFormat dateFormatter;
+    private SimpleDateFormat simpleDateFormat;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +93,11 @@ public class ConnectedActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        dateFormatter = new SimpleDateFormat("MMddyyHHmmss"); // format in which datalogger returns date
+        dateFormatter.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
+        simpleDateFormat = new SimpleDateFormat("MM/dd/yy hh:mm:ss a", Locale.US);// formatting the parsed date for display
+
+
         String name = getIntent().getStringExtra("deviceName");
         String address = getIntent().getStringExtra("deviceAddress");
         dataLogger = new DataLogger(name, address);
@@ -93,31 +106,30 @@ public class ConnectedActivity extends AppCompatActivity {
         eventPids = new ArrayList<>();
         dpidListSpeed.add(DataLoggerInterface.PID_VEHICLE_SPEED);
         dpidListRPM.add(DataLoggerInterface.PID_ENGINE_RPM);
-        fuelTextView = (TextView) findViewById(R.id.fuelLevelValue);
-        latitudeTextView = (TextView) findViewById(R.id.latValue);
-        longitudeTextView = (TextView) findViewById(R.id.longValue);
-        speedTextView = (TextView) findViewById(R.id.speedTextView);
-        rpmTextView = (TextView) findViewById(R.id.rpmTextView);
-        favSwitch = (Switch) findViewById(R.id.favSwitch);
+        fuelTextView = findViewById(R.id.fuelLevelValue);
+        latitudeTextView = findViewById(R.id.latValue);
+        longitudeTextView = findViewById(R.id.longValue);
+        speedTextView = findViewById(R.id.speedTextView);
+        bleapValue = findViewById(R.id.bleapEventValue);
+        dataloggerType = findViewById(R.id.dataloggerType);
+        rpmTextView = findViewById(R.id.rpmTextView);
+        favSwitch = findViewById(R.id.favSwitch);
         batteryOptimizationContainer = findViewById(R.id.batteryOptimizationContainer);
-        eventDescriptionView = (TextView) findViewById(R.id.eventDescriptionTextView);
-        registerAdvancedButton = (Button) findViewById(R.id.registerAdvancedButton);
-        unRegisterAdvancedButton = (Button) findViewById(R.id.unRegisterAdvancedButton);
-        favSwitch = (Switch) findViewById(R.id.favSwitch);
-        favSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
+        eventDescriptionView = findViewById(R.id.eventDescriptionTextView);
+        registerAdvancedButton = findViewById(R.id.registerAdvancedButton);
+        unRegisterAdvancedButton = findViewById(R.id.unRegisterAdvancedButton);
+        favSwitch = findViewById(R.id.favSwitch);
+        favSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
 
-                    // setting the device as favorite. Setting a device as favorite, enables auto connect
-                    dataLoggerInterface.setFavoriteDevice(dataLogger.getName(), dataLogger.getAddress());
-                    favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
-                } else {
+                // setting the device as favorite. Setting a device as favorite, enables auto connect
+                dataLoggerInterface.setFavoriteDevice(dataLogger.getName(), dataLogger.getAddress());
+                favSwitch.setText("Auto connect turned on for device: " + dataLogger.getName());
+            } else {
 
-                    // removing the device as favorite - disabling auto connect
-                    dataLoggerInterface.forgetDevice();
-                    favSwitch.setText("Auto connect not enabled for the connected device");
-                }
+                // removing the device as favorite - disabling auto connect
+                dataLoggerInterface.forgetDevice();
+                favSwitch.setText("Auto connect not enabled for the connected device");
             }
         });
         // checking if the current device is a favorite device
@@ -133,46 +145,40 @@ public class ConnectedActivity extends AppCompatActivity {
         // same pid should not be registered multiple times to avoid overwhelming datalogger
 
         // pressing this multiple times might cause app to behave unexpectedly
-        registerAdvancedButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(v.getContext(), "Registering PIDs For Continuous Updates", Toast.LENGTH_LONG).show();
+        registerAdvancedButton.setOnClickListener(v -> {
+            Toast.makeText(v.getContext(), "Registering PIDs For Continuous Updates", Toast.LENGTH_LONG).show();
 
-                // registering PIDs with their IDs
-                boolean registerSpeed = false;
-                boolean registerRPM = false;
-                try {
-                    registerSpeed = dataLoggerInterface.registerDataPid(DPID_SPEED_ID, dpidListSpeed);
-                    registerRPM = dataLoggerInterface.registerDataPid(DPID_RPM_ID, dpidListRPM);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            // registering PIDs with their IDs
+            boolean registerSpeed = false;
+            boolean registerRPM = false;
+            try {
+                registerSpeed = dataLoggerInterface.registerDataPid(DPID_SPEED_ID, dpidListSpeed);
+                registerRPM = dataLoggerInterface.registerDataPid(DPID_RPM_ID, dpidListRPM);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-                if (registerSpeed && registerRPM) {
-                    Log.d(TAG, " speed and rpm registered successfully");
-                } else {
-                    Log.d(TAG, " speed and rpm registration failed");
-                }
+            if (registerSpeed && registerRPM) {
+                Log.d(TAG, " speed and rpm registered successfully");
+            } else {
+                Log.d(TAG, " speed and rpm registration failed");
             }
         });
 
-        unRegisterAdvancedButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(v.getContext(), "UnRegistering PIDs", Toast.LENGTH_LONG).show();
+        unRegisterAdvancedButton.setOnClickListener(v -> {
+            Toast.makeText(v.getContext(), "UnRegistering PIDs", Toast.LENGTH_LONG).show();
 
-                // unregistering PIDs with their IDs
-                try {
-                    dataLoggerInterface.unregisterDataPid(DPID_SPEED_ID);
-                    dataLoggerInterface.unregisterDataPid(DPID_RPM_ID);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                rpmTextView.setText("RPM: --");
-                speedTextView.setText("Speed: --");
+            // unregistering PIDs with their IDs
+            try {
+                dataLoggerInterface.unregisterDataPid(DPID_SPEED_ID);
+                dataLoggerInterface.unregisterDataPid(DPID_RPM_ID);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+            rpmTextView.setText("RPM: --");
+            speedTextView.setText("Speed: --");
         });
-
+        dataloggerType.setText("Datalogger type bleap: " + DataLoggerInterface.isBleap);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -219,12 +225,12 @@ public class ConnectedActivity extends AppCompatActivity {
             switch (event.DPid) {
                 case DPID_SPEED_ID:
                     VehicleSpeed speed = (VehicleSpeed) event.PID_Data.get(PID_VEHICLE_SPEED);
-                    String speedText = "Speed: " + String.valueOf(speed.value) + speed.unit;
+                    String speedText = "Speed: " + speed.value + speed.unit;
                     speedTextView.setText(speedText);
                     break;
                 case DPID_RPM_ID:
                     EngineRPM engineRPM = (EngineRPM) event.PID_Data.get(PID_ENGINE_RPM);
-                    String rpmText = "RPM: " + String.valueOf(engineRPM.value) + engineRPM.unit;
+                    String rpmText = "RPM: " + engineRPM.value + engineRPM.unit;
                     rpmTextView.setText(rpmText);
                     break;
                 default:
@@ -242,16 +248,32 @@ public class ConnectedActivity extends AppCompatActivity {
         switch (event.EPid) {
             case DataLoggerInterface.PID_EVENT_HARD_BRAKING:
                 Integer breakValue = ((HardBrakingData) event.data).maxBraking;
-                eventDescription = "Hard Break: " + String.valueOf(breakValue);
+                eventDescription = "Hard Break: " + breakValue;
                 break;
             case DataLoggerInterface.PID_EVENT_HARD_ACCEL:
                 Integer accelValue = ((HardAccelerationData) event.data).maxAcceleration;
-                eventDescription = "Hard Accel: " + String.valueOf(accelValue);
+                eventDescription = "Hard Accel: " + accelValue;
                 break;
             default:
                 break;
         }
         eventDescriptionView.setText(eventDescription);
+    }
+
+    @SuppressLint("SetTextI18n")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onBleapUDPReceived(BleapUDPDataEvent event) throws ParseException {
+        switch (event.EPid) {
+            case DataLoggerInterface.PID_EVENT_GPS:
+                GPSEvent data = (GPSEvent) event.data;
+                bleapValue.setText("GPS event received" +
+                        "\nDate:            " + simpleDateFormat.format(dateFormatter.parse(data.udpMessageHeader.deviceTime)) +
+                        "\nLAT:             " + data.udpMessageHeader.latitude +
+                        "\nLONG:            " + data.udpMessageHeader.longitude +
+                        "\nSATELLITES:      " + data.satellitesInView
+                );
+                break;
+        }
     }
 
     @Override
@@ -260,18 +282,10 @@ public class ConnectedActivity extends AppCompatActivity {
         if (connected) {
             new AlertDialog.Builder(ConnectedActivity.this)
                     .setTitle("Do you want to disconnect from DataLogger?")
-                    .setPositiveButton("Disconnect", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dataLoggerInterface.disconnect();
-                            finish();
-                        }
-                    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            }).setCancelable(true)
+                    .setPositiveButton("Disconnect", (dialog, which) -> {
+                        dataLoggerInterface.disconnect();
+                        finish();
+                    }).setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss()).setCancelable(true)
                     .show();
         } else {
             super.onBackPressed();
@@ -320,7 +334,7 @@ public class ConnectedActivity extends AppCompatActivity {
         // un-registering events
         boolean unregisterEventPid = dataLoggerInterface.unregisterEventPid(eventPids);
         eventDescriptionView.setText("--");
-        Toast.makeText(this, "Event pid unregister result: " + String.valueOf(unregisterEventPid), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Event pid unregister result: " + unregisterEventPid, Toast.LENGTH_SHORT).show();
     }
 
     // click handlers for more info
@@ -330,48 +344,35 @@ public class ConnectedActivity extends AppCompatActivity {
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.basic_header)
                         .setMessage(R.string.basic_info)
-                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setCancelable(true)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;
             case R.id.advancedChannelDataPidInfo:
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.advanced_header_data)
                         .setMessage(R.string.advanced_info_data)
-                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setCancelable(true)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;
             case R.id.advancedChannelEventPidInfo:
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.advanced_header_events)
                         .setMessage(R.string.advanced_info_events)
-                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setCancelable(true)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
+                        .show();
+                break;
+            case R.id.udpChannelDataPidInfo:
+                new AlertDialog.Builder(ConnectedActivity.this)
+                        .setTitle(R.string.udp_header_events)
+                        .setMessage(R.string.udp_info_events)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;
             case R.id.autoConnectInfo:
                 new AlertDialog.Builder(ConnectedActivity.this)
                         .setTitle(R.string.autoconnect_header)
                         .setMessage(R.string.autoconnect_info)
-                        .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).setCancelable(true)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> dialog.dismiss()).setCancelable(true)
                         .show();
                 break;
             default:
